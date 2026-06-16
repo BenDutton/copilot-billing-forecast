@@ -23,6 +23,7 @@ import {
 } from "@primer/octicons-react";
 import { useReport } from "@/components/report-provider";
 import { ExportMenu } from "@/components/export-menu";
+import { usePersistentState } from "@/components/use-persistent-state";
 import { SortableTh, type SortDir } from "@/components/sortable-th";
 import { aggregateByUser, aggregateDaily, type UserUsage } from "@/lib/report";
 import { forecastDaily } from "@/lib/forecast";
@@ -93,7 +94,9 @@ type SortKey =
 
 export function TeamInsights() {
   const { report } = useReport();
-  const [budgetInput, setBudgetInput] = useState("");
+  const [budgetInput, setBudgetInput] = usePersistentState(
+    "team-insights:budget",
+  );
   const [filter, setFilter] = useState("");
   const [page, setPage] = useState(0);
   const [sortKey, setSortKey] = useState<SortKey>("totalQuantity");

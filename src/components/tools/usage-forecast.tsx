@@ -22,6 +22,7 @@ import {
 } from "@primer/octicons-react";
 import { useReport } from "@/components/report-provider";
 import { ExportMenu } from "@/components/export-menu";
+import { usePersistentState } from "@/components/use-persistent-state";
 import { aggregateDaily, sumMetric } from "@/lib/report";
 import { forecastDaily } from "@/lib/forecast";
 import styles from "../app.module.css";
@@ -48,7 +49,9 @@ const TREND_META = {
 
 export function UsageForecast() {
   const { report } = useReport();
-  const [entitlementInput, setEntitlementInput] = useState("");
+  const [entitlementInput, setEntitlementInput] = usePersistentState(
+    "usage-forecast:entitlement",
+  );
   const [adjustPct, setAdjustPct] = useState(0);
   const chartRef = useRef<HTMLDivElement>(null);
 
