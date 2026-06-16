@@ -186,6 +186,11 @@ export function Sidebar({
           href="https://github.com/BenDutton/copilot-billing-forecast"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() =>
+            // Privacy: only a fixed link location is captured - never any
+            // report or per-user data.
+            posthog.capture("github_link_clicked", { link_location: "sidebar-source" })
+          }
         >
           Open source on GitHub
         </a>
@@ -197,6 +202,9 @@ export function Sidebar({
             href={`https://github.com/BenDutton/copilot-billing-forecast/commit/${COMMIT_SHA}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() =>
+              posthog.capture("github_link_clicked", { link_location: "sidebar-build" })
+            }
           >
             build {COMMIT_SHA}
           </a>

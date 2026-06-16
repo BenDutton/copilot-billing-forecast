@@ -125,10 +125,29 @@ function Shell() {
                   href="https://github.com/BenDutton/copilot-billing-forecast"
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() =>
+                    // Privacy: only a fixed link location is captured - never any
+                    // report or per-user data.
+                    posthog.capture("github_link_clicked", { link_location: "footer-source" })
+                  }
                 >
                   GitHub
                 </a>
                 {" "}- contributions welcome.
+              </Text>
+              <Text as="p" className={styles.muted} style={{ fontSize: 12, marginTop: 8 }}>
+                Something is not right?{" "}
+                <a
+                  href="https://github.com/BenDutton/copilot-billing-forecast/issues"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() =>
+                    posthog.capture("github_link_clicked", { link_location: "footer-issue" })
+                  }
+                >
+                  Submit an issue
+                </a>
+                .
               </Text>
             </footer>
           </div>

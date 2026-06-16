@@ -21,6 +21,7 @@ Only the aggregate, non-sensitive metadata listed below is captured.
 | `csv_uploaded` | A usage report CSV is successfully parsed and loaded | `report_type` (`summarized` \| `detailed` \| `ai` \| `unknown`), `row_count` (number of rows in the report) |
 | `tool_viewed` | A tool is opened from the sidebar (or via the logo reset) | `tool_id` (`usage-forecast` \| `team-insights` \| `model-breakdown` \| `spike-detection` \| `cost-center-rollup`) |
 | `resource_clicked` | A curated Resources link in the sidebar is opened | `resource_label` (the link's title), `resource_category` (`News` \| `Courses & guides` \| `Videos`) |
+| `github_link_clicked` | An outbound link to the project's GitHub repository is opened | `link_location` (`sidebar-source` \| `sidebar-build` \| `footer-source` \| `footer-issue`) |
 
 Beyond this event, only anonymous pageviews (the app uses in-app state for navigation,
 so URLs contain no report data) and basic device/browser information are recorded.
