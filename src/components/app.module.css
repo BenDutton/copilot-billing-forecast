@@ -249,6 +249,20 @@
   flex-shrink: 0;
 }
 
+/* Run-rate control: label stacked above a centred slider row, so it lines up
+   with the neighbouring entitlement field. */
+.sliderField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .statGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

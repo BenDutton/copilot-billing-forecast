@@ -191,38 +191,40 @@ export function UsageForecast() {
       <div className={styles.controlsRow}>
         <Label variant="accent">Projection through {monthEndLabel}</Label>
         <div className={styles.controlsGroup}>
-          <div className={styles.controlsGroup}>
+          <div className={styles.sliderField}>
             <span className={styles.labelWithInfo} style={{ fontSize: 12, fontWeight: 600 }}>
               Run-rate change
               <InfoTip text="What-if: adjust the projected daily usage from today onward. Drag left to model cutting usage, right to model growth. Observed days are unchanged." />
             </span>
-            <input
-              type="range"
-              min={-100}
-              max={100}
-              step={5}
-              value={adjustPct}
-              onChange={(e) => setAdjustPct(Number(e.target.value))}
-              aria-label="Run-rate change percentage"
-              style={{ width: 200 }}
-            />
-            <span className={styles.sliderValue}>
-              <Label variant={adjustPct === 0 ? "secondary" : adjustPct < 0 ? "success" : "danger"}>
-                {adjustPct > 0 ? "+" : ""}
-                {adjustPct}%
-              </Label>
-            </span>
-            <PrimerTooltip text="Reset run-rate change to 0%" direction="n">
-              <IconButton
-                icon={XCircleFillIcon}
-                aria-label="Reset run-rate change to 0%"
-                variant="invisible"
-                size="small"
-                unsafeDisableTooltip
-                onClick={() => setAdjustPct(0)}
-                style={{ visibility: adjustPct === 0 ? "hidden" : "visible" }}
+            <div className={styles.sliderRow}>
+              <input
+                type="range"
+                min={-100}
+                max={100}
+                step={5}
+                value={adjustPct}
+                onChange={(e) => setAdjustPct(Number(e.target.value))}
+                aria-label="Run-rate change percentage"
+                style={{ width: 200 }}
               />
-            </PrimerTooltip>
+              <span className={styles.sliderValue}>
+                <Label variant={adjustPct === 0 ? "secondary" : adjustPct < 0 ? "success" : "danger"}>
+                  {adjustPct > 0 ? "+" : ""}
+                  {adjustPct}%
+                </Label>
+              </span>
+              <PrimerTooltip text="Reset run-rate change to 0%" direction="n">
+                <IconButton
+                  icon={XCircleFillIcon}
+                  aria-label="Reset run-rate change to 0%"
+                  variant="invisible"
+                  size="small"
+                  unsafeDisableTooltip
+                  onClick={() => setAdjustPct(0)}
+                  style={{ visibility: adjustPct === 0 ? "hidden" : "visible" }}
+                />
+              </PrimerTooltip>
+            </div>
           </div>
           <FormControl>
             <FormControl.Label>
@@ -269,21 +271,20 @@ export function UsageForecast() {
           sub={`${formatAic(projectedEndLower)} – ${formatAic(projectedEndUpper)}`}
           extra={
             <>
-              {adjustPct !== 0 && (
-                <span
-                  style={{
-                    display: "block",
-                    color:
-                      scenarioDelta < 0
-                        ? "var(--fgColor-success, #1a7f37)"
-                        : "var(--fgColor-danger, #cf222e)",
-                    fontWeight: 600,
-                  }}
-                >
-                  {scenarioDelta < 0 ? "−" : "+"}
-                  {formatAic(Math.abs(scenarioDelta))} vs baseline
-                </span>
-              )}
+              <span
+                style={{
+                  display: "block",
+                  visibility: adjustPct !== 0 ? "visible" : "hidden",
+                  color:
+                    scenarioDelta < 0
+                      ? "var(--fgColor-success, #1a7f37)"
+                      : "var(--fgColor-danger, #cf222e)",
+                  fontWeight: 600,
+                }}
+              >
+                {scenarioDelta < 0 ? "−" : "+"}
+                {formatAic(Math.abs(scenarioDelta))} vs baseline
+              </span>
               {entitlement > 0 &&
                 (overageAic > 0 ? (
                   <span
@@ -366,23 +367,6 @@ export function UsageForecast() {
           </div>
         </div>
 
-        {adjustPct !== 0 && (
-          <div className={styles.chartLegend}>
-            <span className={styles.legendItem}>
-              <span className={styles.legendSwatch} style={{ backgroundColor: "#0969da" }} />
-              Observed
-            </span>
-            <span className={styles.legendItem}>
-              <span className={styles.legendSwatch} style={{ backgroundColor: "#57606a" }} />
-              Baseline forecast
-            </span>
-            <span className={styles.legendItem}>
-              <span className={styles.legendSwatch} style={{ backgroundColor: "#8250df" }} />
-              Scenario
-            </span>
-          </div>
-        )}
-
         <div className={styles.chartWrap} ref={chartRef}>
           <ResponsiveContainer initialDimension={{ width: 600, height: 300 }}>
             <ComposedChart data={cumulativeData} margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
@@ -463,6 +447,23 @@ export function UsageForecast() {
               )}
             </ComposedChart>
           </ResponsiveContainer>
+        </div>
+
+        <div className={styles.chartLegend}>
+          <span className={styles.legendItem}>
+            <span className={styles.legendSwatch} style={{ backgroundColor: "#0969da" }} />
+            Observed
+          </span>
+          {adjustPct !== 0 && (
+            <span className={styles.legendItem}>
+              <span className={styles.legendSwatch} style={{ backgroundColor: "#57606a" }} />
+              Baseline forecast
+            </span>
+          )}
+          <span className={styles.legendItem}>
+            <span className={styles.legendSwatch} style={{ backgroundColor: "#8250df" }} />
+            {adjustPct !== 0 ? "Scenario" : "Forecast"}
+          </span>
         </div>
       </div>
     </div>
