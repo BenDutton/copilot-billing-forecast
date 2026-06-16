@@ -16,7 +16,7 @@ import { getToolsByCategory, CATEGORY_COLOR as TOOL_CATEGORY_COLOR, type ToolCat
 import styles from "./app.module.css";
 
 /** Short commit SHA of the deployed build, baked in at build time. */
-const COMMIT_SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA ?? "").trim().match(/^[0-9a-f]{7}$/i)?.[0] ?? "";
+const COMMIT_SHA = (process.env.NEXT_PUBLIC_COMMIT_SHA ?? "").trim().slice(0, 7);
 /** Accent color per sidebar section, keyed by category (Resources is sidebar-only). */
 const CATEGORY_COLOR: Record<ToolCategory | "Resources", string> = {
   ...TOOL_CATEGORY_COLOR,
