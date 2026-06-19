@@ -465,7 +465,7 @@ export function UsageForecast() {
         {entitlement > 0 ? (
           <StatCard
             title="Entitlement outlook"
-            info="When your cumulative usage is projected to reach the entitlement, counted from today based on the current run rate."
+            info="When your cumulative usage is projected to reach the entitlement, counted from today based on the current run rate. While within the cap, also shows the share of the entitlement projected to be used by month-end."
             value={
               capCross
                 ? capCross.daysOut <= 0
@@ -478,7 +478,7 @@ export function UsageForecast() {
                 ? capCross.daysOut <= 0
                   ? `${formatAic(entitlement)} already reached on ${capCross.date}`
                   : `Reaches ${formatAic(entitlement)} on ${capCross.date}`
-                : `Stays under ${formatAic(entitlement)} this month`
+                : `Stays under ${formatAic(entitlement)} this month · ${Math.round((projectedEnd / entitlement) * 100)}% used`
             }
           />
         ) : (
