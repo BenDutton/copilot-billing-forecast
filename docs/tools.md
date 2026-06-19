@@ -31,7 +31,12 @@ Forecast total AI Credit consumption and track it against your entitlement.
 **How to read it**
 
 - Enter your entitlement to see when, and by how much, you are projected to exceed it.
-- Use the what-if controls to adjust the run rate and see how the projection responds.
+- Use the **projected daily run rate** control to model a different rate from today
+  onward. Set it as a percentage change relative to the fitted rate (the slider) or as
+  an exact figure (the input) - the two stay in sync, so you only ever set one. When a
+  scenario rate is active the projection becomes a flat line whose band shows expected
+  day-to-day variability (rather than the trend's prediction interval), and a grey
+  baseline line tracks the unadjusted trend for comparison.
 
 **Key assumptions**
 

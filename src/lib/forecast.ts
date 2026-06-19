@@ -23,6 +23,12 @@ export interface ForecastResult {
   dailyRunRate: number;
   /** R^2 goodness of fit, 0..1. */
   rSquared: number;
+  /**
+   * Approximate 95% half-width of day-to-day usage variability (critical value ×
+   * residual standard error), constant per day and independent of the trend's
+   * leverage. Useful as a spread band around a flat, user-asserted run rate.
+   */
+  dailyVariability: number;
   /** Total of actual observed values. */
   observedTotal: number;
   /** Projected total over the forecast horizon (forecast values only). */
@@ -189,6 +195,7 @@ export function forecastDaily(series: DailyPoint[], horizonDays = 30): ForecastR
     slopePerDay: reg.slope,
     dailyRunRate,
     rSquared: reg.rSquared,
+    dailyVariability: crit * reg.se,
     observedTotal,
     projectedTotal,
     projectedLower,

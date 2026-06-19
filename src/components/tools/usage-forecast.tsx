@@ -34,6 +34,11 @@ const USD_PER_AIC = 0.01;
 /** Accent colour for the drag-to-select range (matches the "Observed" series). */
 const SELECTION_COLOR = "#0969da";
 
+/** Series colours. The grey baseline always tracks the data-driven trend; the
+ * coloured line is the projection (the observed trend, or your scenario rate). */
+const FORECAST_COLOR = "#8250df"; // projection / scenario run-rate line
+const BASELINE_COLOR = "#57606a"; // data-driven baseline shown for comparison
+
 /**
  * Days from the last observed day through the end of that calendar month.
  * GitHub AI Credit entitlements reset monthly, so the forecast runs to month-end.
@@ -69,7 +74,12 @@ export function UsageForecast() {
   const [entitlementInput, setEntitlementInput] = usePersistentState(
     "usage-forecast:entitlement",
   );
-  const [adjustPct, setAdjustPct] = useState(0);
+  // What-if scenario: the daily run rate (AIC/day) to project from today onward.
+  // Blank means "use the trend-fitted rate". The percentage slider and the exact
+  // input below are two views of this single value.
+  const [scenarioRateInput, setScenarioRateInput] = usePersistentState(
+    "usage-forecast:scenario-rate",
+  );
   const chartRef = useRef<HTMLDivElement>(null);
 
   // Drag-to-select range on the chart. `selStart`/`selEnd` hold the date labels
@@ -79,8 +89,13 @@ export function UsageForecast() {
   const [selEnd, setSelEnd] = useState<string | null>(null);
 
   const entitlement = Math.max(0, Number(entitlementInput) || 0);
-  // What-if multiplier applied to the projected (future) daily run rate.
-  const multiplier = 1 + adjustPct / 100;
+  // Parsed scenario run rate, or null when the field is blank/non-numeric (project
+  // at the fitted trend). A set value projects a flat daily rate from today onward.
+  const parsedScenarioRate = Number(scenarioRateInput);
+  const scenarioRate =
+    scenarioRateInput.trim() === "" || !Number.isFinite(parsedScenarioRate)
+      ? null
+      : Math.max(0, parsedScenarioRate);
 
   // AI Credits are reported in the `quantity` field of the AI usage report.
   const daily = useMemo(
@@ -110,12 +125,19 @@ export function UsageForecast() {
       if (i < obs) {
         runA += p.actual ?? 0;
         seed = runA;
+        // The dashed projection/baseline lines and the band only render from
+        // "today" (the last observed day) onward, anchored there so they join the
+        // solid observed line. `forecast` stays populated on every day because the
+        // drag-to-select range reads it as the cumulative running total.
+        const anchor = i === obs - 1;
         return {
           date: p.date,
           actual: round2(runA),
           forecast: round2(runA),
           baseline: round2(runA),
-          band: [round2(runA), round2(runA)] as [number, number],
+          forecastLine: anchor ? round2(runA) : null,
+          baselineLine: anchor ? round2(runA) : null,
+          band: anchor ? ([round2(runA), round2(runA)] as [number, number]) : null,
         };
       }
       if (i === obs) {
@@ -124,19 +146,27 @@ export function UsageForecast() {
         runU = seed;
         runBase = seed;
       }
-      runF += p.forecast * multiplier;
-      runL += p.lower * multiplier;
-      runU += p.upper * multiplier;
+      // When a scenario rate is set, project from that flat daily rate the user has
+      // asserted. The regression's prediction band no longer applies, so the spread
+      // shown is instead the historical day-to-day variability (constant per day).
+      const base = scenarioRate ?? p.forecast;
+      const lowerHalf = scenarioRate != null ? forecast.dailyVariability : p.forecast - p.lower;
+      const upperHalf = scenarioRate != null ? forecast.dailyVariability : p.upper - p.forecast;
+      runF += base;
+      runL += Math.max(0, base - lowerHalf);
+      runU += base + upperHalf;
       runBase += p.forecast;
       return {
         date: p.date,
         actual: null,
         forecast: round2(runF),
         baseline: round2(runBase),
+        forecastLine: round2(runF),
+        baselineLine: round2(runBase),
         band: [round2(runL), round2(runU)] as [number, number],
       };
     });
-  }, [forecast, multiplier]);
+  }, [forecast, scenarioRate]);
 
   // Summary of the dragged range: the cumulative AIC consumed between the two
   // selected dates (the `forecast` series carries the running total for both
@@ -221,15 +251,29 @@ export function UsageForecast() {
   // The forecast horizon runs to month-end, so the final point is the last day of the month.
   const monthEndDate = forecast.points[forecast.points.length - 1]?.date ?? lastActualDate;
   const monthEndLabel = monthEndDate ? formatMonthEnd(monthEndDate) : "month end";
+  // The fitted run rate is the baseline; a scenario asserts a different flat rate.
+  const baselineRate = forecast.dailyRunRate;
+  const isScenario = scenarioRate != null;
+  // Percentage change of the scenario rate versus the fitted baseline, used by the
+  // slider. Both the slider and the exact input map back to `scenarioRate`.
+  const scenarioPct =
+    isScenario && baselineRate > 0 ? Math.round((scenarioRate / baselineRate - 1) * 100) : 0;
+  // Slider position, clamped to its range even if an exact value implies more.
+  const sliderPct = Math.max(-100, Math.min(100, scenarioPct));
 
-  // End-of-horizon projected cumulative total (AIC) and its band, adjusted by the
-  // what-if multiplier. `baselineEnd` is the unadjusted projection for comparison.
-  const projectedEnd = forecast.observedTotal + forecast.projectedTotal * multiplier;
-  const projectedEndLower = forecast.observedTotal + forecast.projectedLower * multiplier;
-  const projectedEndUpper = forecast.observedTotal + forecast.projectedUpper * multiplier;
-  const baselineEnd = forecast.observedTotal + forecast.projectedTotal;
+  // End-of-horizon projected cumulative total (AIC) and its band, taken from the
+  // last cumulative point so the scenario run rate flows through. `baselineEnd` is
+  // the unadjusted trend projection for comparison.
+  const lastCumulative = cumulativeData[cumulativeData.length - 1];
+  const projectedEnd = lastCumulative?.forecast ?? forecast.observedTotal;
+  const [projectedEndLower, projectedEndUpper] = lastCumulative?.band ?? [
+    projectedEnd,
+    projectedEnd,
+  ];
+  const baselineEnd = lastCumulative?.baseline ?? forecast.observedTotal;
   const scenarioDelta = projectedEnd - baselineEnd;
-  const adjustedRate = forecast.dailyRunRate * multiplier;
+  const adjustedRate = scenarioRate ?? baselineRate;
+  const projectionLabel = isScenario ? "Scenario" : "Forecast";
 
   const overageAic = entitlement > 0 ? Math.max(0, projectedEnd - entitlement) : 0;
   const overageUsd = overageAic * USD_PER_AIC;
@@ -237,11 +281,11 @@ export function UsageForecast() {
   const exportStats = [
     { label: "Observed total", value: formatAic(observed), sub: `${forecast.observedDays} days` },
     {
-      label: adjustPct !== 0 ? "Scenario run rate" : "Daily run rate",
-      value: `${formatAic(adjustPct !== 0 ? adjustedRate : forecast.dailyRunRate)}/day`,
+      label: isScenario ? "Scenario run rate" : "Daily run rate",
+      value: `${formatAic(adjustedRate)}/day`,
     },
     {
-      label: adjustPct !== 0 ? "Scenario month total" : "Projected month total",
+      label: isScenario ? "Scenario month total" : "Projected month total",
       value: formatAic(projectedEnd),
       sub: `${formatAic(projectedEndLower)} – ${formatAic(projectedEndUpper)}`,
     },
@@ -270,8 +314,8 @@ export function UsageForecast() {
         <div className={styles.controlsGroup}>
           <div className={styles.sliderField}>
             <span className={styles.labelWithInfo} style={{ fontSize: 12, fontWeight: 600 }}>
-              Run-rate change
-              <InfoTip text="What-if: adjust the projected daily usage from today onward. Drag left to model cutting usage, right to model growth. Observed days are unchanged." />
+              Projected daily run rate
+              <InfoTip text="What-if: set the daily run rate used for the projection from today onward. Adjust by percentage relative to the fitted rate, or enter an exact figure - the two stay in sync. Leave at the fitted rate to project the observed trend." />
             </span>
             <div className={styles.fieldRow}>
               <div className={styles.sliderControl}>
@@ -280,32 +324,45 @@ export function UsageForecast() {
                   min={-100}
                   max={100}
                   step={5}
-                  value={adjustPct}
-                  onChange={(e) => setAdjustPct(Number(e.target.value))}
+                  value={sliderPct}
+                  onChange={(e) => {
+                    const pct = Number(e.target.value);
+                    setScenarioRateInput(
+                      pct === 0 ? "" : String(round2(baselineRate * (1 + pct / 100))),
+                    );
+                  }}
                   aria-label="Run-rate change percentage"
                 />
                 <span className={styles.sliderValue}>
-                  <Label variant={adjustPct === 0 ? "secondary" : adjustPct < 0 ? "success" : "danger"}>
-                    {adjustPct > 0 ? "+" : ""}
-                    {adjustPct}%
+                  <Label variant={scenarioPct === 0 ? "secondary" : scenarioPct < 0 ? "success" : "danger"}>
+                    {scenarioPct > 0 ? "+" : ""}
+                    {scenarioPct}%
                   </Label>
                 </span>
               </div>
+              <TextInput
+                type="number"
+                min={0}
+                placeholder={`${Math.round(baselineRate)}`}
+                value={scenarioRateInput}
+                onChange={(e) => setScenarioRateInput(e.target.value)}
+                trailingVisual="AIC/day"
+                style={{ width: 150 }}
+                aria-label="Daily run rate"
+              />
               <Button
                 variant="invisible"
                 size="small"
-                onClick={() => setAdjustPct(0)}
-                disabled={adjustPct === 0}
+                onClick={() => setScenarioRateInput("")}
+                disabled={!isScenario}
               >
                 Reset
               </Button>
             </div>
             <span className={styles.fieldHint}>
-              {adjustPct === 0
-                ? "Projecting at the observed trend."
-                : adjustPct < 0
-                  ? `Modelling ${Math.abs(adjustPct)}% lower future usage.`
-                  : `Modelling ${adjustPct}% higher future usage.`}
+              {isScenario
+                ? `Projecting at ${formatAic(scenarioRate)}/day (${scenarioPct > 0 ? "+" : ""}${scenarioPct}% vs the fitted ${formatAic(baselineRate)}/day).`
+                : `Projecting at the fitted ${formatAic(baselineRate)}/day - adjust the slider or enter a rate to model a different one.`}
             </span>
           </div>
           <div className={styles.sliderField}>
@@ -351,17 +408,17 @@ export function UsageForecast() {
         />
         <StatCard
           title="Daily run rate"
-          info="Average AI Credits consumed per day, derived from the trend line fitted to your usage. The most recent day is often incomplete, so it is left out of the trend fit (it still counts toward the observed total). With a run-rate change applied, this shows the adjusted scenario rate."
-          value={`${formatAic(adjustPct !== 0 ? adjustedRate : forecast.dailyRunRate)}/day`}
+          info="Average AI Credits consumed per day, derived from the trend line fitted to your usage. The most recent day is often incomplete, so it is left out of the trend fit (it still counts toward the observed total). With a scenario run rate set, this shows that rate instead."
+          value={`${formatAic(isScenario ? adjustedRate : forecast.dailyRunRate)}/day`}
           sub={
-            adjustPct !== 0
+            isScenario
               ? `Baseline ${formatAic(forecast.dailyRunRate)}/day`
               : `${formatUsd(forecast.dailyRunRate * USD_PER_AIC)}/day`
           }
         />
         <StatCard
-          title={adjustPct !== 0 ? "Scenario month total" : "Projected month total"}
-          info="Estimated cumulative AI Credits by the end of the current month if usage continues at the current rate. The range is an approximate 95% confidence band."
+          title={isScenario ? "Scenario month total" : "Projected month total"}
+          info="Estimated cumulative AI Credits by the end of the current month. The range is an approximate 95% band: the trend's prediction interval, or expected day-to-day variability when you set a scenario rate."
           value={formatAic(projectedEnd)}
           sub={`${formatAic(projectedEndLower)} – ${formatAic(projectedEndUpper)}`}
           extra={
@@ -369,7 +426,7 @@ export function UsageForecast() {
               <span
                 style={{
                   display: "block",
-                  visibility: adjustPct !== 0 ? "visible" : "hidden",
+                  visibility: isScenario ? "visible" : "hidden",
                   color:
                     scenarioDelta < 0
                       ? "var(--fgColor-success, #1a7f37)"
@@ -445,12 +502,13 @@ export function UsageForecast() {
               <Heading as="h2" style={{ fontSize: 16 }}>
                 Cumulative AI Credits this month
               </Heading>
-              <InfoTip text="The projection fits a linear regression to your daily usage and extends it to month-end. The shaded band is an approximate 95% prediction interval: it widens with day-to-day variability and the further it projects, and is floored at zero. The most recent (partial) day is excluded from the fit so it doesn't drag the trend down." />
+              <InfoTip text="The projection fits a linear regression to your daily usage and extends it to month-end. The shaded band is an approximate 95% prediction interval: it widens with day-to-day variability and the further it projects, and is floored at zero. When you set a scenario run rate, the band instead shows expected day-to-day variability (about a 95% spread) around that flat rate. The most recent (partial) day is excluded from the fit so it doesn't drag the trend down." />
             </span>
             <Text className={styles.muted} style={{ fontSize: 14 }}>
-              Solid line is observed usage; the dashed purple line is the projected trend
-              with an approximate 95% confidence band
-              {adjustPct !== 0 ? ", adjusted by your run-rate change versus the grey baseline" : ""}
+              Solid line is observed usage; the dashed line is{" "}
+              {isScenario
+                ? "your scenario run rate, with a band for expected day-to-day variability, versus the grey baseline trend"
+                : "the projected trend with an approximate 95% confidence band"}
               {entitlement > 0 ? "; the red dotted line is your entitlement" : ""}.
             </Text>
           </div>
@@ -512,16 +570,16 @@ export function UsageForecast() {
               <Area
                 dataKey="band"
                 stroke="none"
-                fill="#8250df"
+                fill={FORECAST_COLOR}
                 fillOpacity={0.15}
                 {...chartAnim}
                 name="band"
               />
-              {adjustPct !== 0 && (
+              {isScenario && (
                 <Line
                   type="monotone"
-                  dataKey="baseline"
-                  stroke="#57606a"
+                  dataKey="baselineLine"
+                  stroke={BASELINE_COLOR}
                   strokeWidth={1.5}
                   strokeDasharray="5 4"
                   dot={false}
@@ -531,8 +589,8 @@ export function UsageForecast() {
               )}
               <Line
                 type="monotone"
-                dataKey="forecast"
-                stroke="#8250df"
+                dataKey="forecastLine"
+                stroke={FORECAST_COLOR}
                 strokeWidth={2}
                 strokeDasharray="5 4"
                 dot={false}
@@ -586,15 +644,15 @@ export function UsageForecast() {
             <span className={styles.legendSwatch} style={{ backgroundColor: "#0969da" }} />
             Observed
           </span>
-          {adjustPct !== 0 && (
+          {isScenario && (
             <span className={styles.legendItem}>
-              <span className={styles.legendSwatch} style={{ backgroundColor: "#57606a" }} />
+              <span className={styles.legendSwatch} style={{ backgroundColor: BASELINE_COLOR }} />
               Baseline forecast
             </span>
           )}
           <span className={styles.legendItem}>
-            <span className={styles.legendSwatch} style={{ backgroundColor: "#8250df" }} />
-            {adjustPct !== 0 ? "Scenario" : "Forecast"}
+            <span className={styles.legendSwatch} style={{ backgroundColor: FORECAST_COLOR }} />
+            {projectionLabel}
           </span>
         </div>
       </div>
@@ -624,8 +682,8 @@ function CapTooltip({
 
   const find = (key: string) => payload.find((p) => p.dataKey === key)?.value;
   const actual = find("actual") as number | null | undefined;
-  const forecast = find("forecast") as number | undefined;
-  const baseline = find("baseline") as number | undefined;
+  const forecast = find("forecastLine") as number | undefined;
+  const baseline = find("baselineLine") as number | undefined;
   const band = find("band") as [number, number] | undefined;
 
   const isProjected = actual == null;
