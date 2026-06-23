@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import posthog from "posthog-js";
 import { Flash, Header, Heading, IconButton, Label, Text } from "@primer/react";
 import { MarkGithubIcon, ShieldLockIcon, ThreeBarsIcon } from "@primer/octicons-react";
@@ -17,6 +17,19 @@ function Shell() {
   const tool = getTool(activeId);
   const ActiveView = tool?.component;
   const toolColor = getToolColor(activeId);
+
+  // When a report first loads, the active tool's view appears without a click,
+  // so emit a tool_viewed for it once on that transition.
+  const hadReport = useRef(false);
+  useEffect(() => {
+    const hasReport = !!report;
+    if (hasReport && !hadReport.current) {
+      // Privacy: only the stable tool id (a fixed enum) is captured - never any
+      // report contents or per-user data.
+      posthog.capture("tool_viewed", { tool_id: activeId });
+    }
+    hadReport.current = hasReport;
+  }, [report, activeId]);
 
   const handleSelect = (id: string) => {
     setActiveId(id);
