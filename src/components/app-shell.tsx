@@ -2,8 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import posthog from "posthog-js";
-import { Flash, Header, Heading, IconButton, Label, Text } from "@primer/react";
-import { MarkGithubIcon, ShieldLockIcon, ThreeBarsIcon } from "@primer/octicons-react";
+import { Flash, Header, Heading, IconButton, Label, Text, Timeline } from "@primer/react";
+import {
+  CopilotIcon,
+  CreditCardIcon,
+  DownloadIcon,
+  GearIcon,
+  GraphIcon,
+  MarkGithubIcon,
+  ShieldLockIcon,
+  ThreeBarsIcon,
+} from "@primer/octicons-react";
 import { Sidebar } from "@/components/sidebar";
 import { CsvUploader } from "@/components/csv-uploader";
 import { ReportProvider, useReport } from "@/components/report-provider";
@@ -188,9 +197,51 @@ function GlobalUploadPrompt() {
           </Text>
           <details className={styles.promptDetails}>
             <summary className={styles.promptSummary}>How do I get my usage report?</summary>
-            <Text as="p" className={styles.muted} style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.5 }}>
-              To download or view an AI usage report in <strong>GitHub Enterprise</strong>, open your enterprise settings, choose <strong>Billing and licensing</strong>, select <strong>Usage</strong>, then <strong>AI usage</strong>, and press <strong>Get usage report</strong>.
+            <Text as="p" className={styles.muted} style={{ margin: "10px 0 4px", fontSize: 13, lineHeight: 1.5 }}>
+              In <strong>GitHub Enterprise</strong>, follow these steps:
             </Text>
+            <Timeline className={styles.promptTimeline}>
+              <Timeline.Item condensed>
+                <Timeline.Badge>
+                  <GearIcon />
+                </Timeline.Badge>
+                <Timeline.Body>
+                  Open your <strong>enterprise settings</strong>.
+                </Timeline.Body>
+              </Timeline.Item>
+              <Timeline.Item condensed>
+                <Timeline.Badge>
+                  <CreditCardIcon />
+                </Timeline.Badge>
+                <Timeline.Body>
+                  Choose <strong>Billing and licensing</strong>.
+                </Timeline.Body>
+              </Timeline.Item>
+              <Timeline.Item condensed>
+                <Timeline.Badge>
+                  <GraphIcon />
+                </Timeline.Badge>
+                <Timeline.Body>
+                  Select <strong>Usage</strong>.
+                </Timeline.Body>
+              </Timeline.Item>
+              <Timeline.Item condensed>
+                <Timeline.Badge>
+                  <CopilotIcon />
+                </Timeline.Badge>
+                <Timeline.Body>
+                  Open <strong>AI usage</strong>.
+                </Timeline.Body>
+              </Timeline.Item>
+              <Timeline.Item condensed>
+                <Timeline.Badge>
+                  <DownloadIcon />
+                </Timeline.Badge>
+                <Timeline.Body>
+                  Press <strong>Get usage report</strong>.
+                </Timeline.Body>
+              </Timeline.Item>
+            </Timeline>
             <Text as="p" className={styles.promptReference}>
               Reference: <a href="https://docs.github.com/en/enterprise-cloud@latest/billing/reference/billing-reports" target="_blank" rel="noopener noreferrer">GitHub billing reports docs</a>
             </Text>

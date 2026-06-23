@@ -296,6 +296,25 @@
   color: var(--fgColor-default, #1f2328);
 }
 
+.promptTimeline {
+  margin: 8px 0 12px;
+}
+
+.promptTimeline [class*="TimelineBadge"] {
+  color: var(--fgColor-accent, #0969da);
+}
+
+.promptTimeline [class*="TimelineBadge"] svg {
+  width: 14px;
+  height: 14px;
+}
+
+.promptTimeline [class*="TimelineBody"] {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--fgColor-default, #1f2328);
+}
+
 .promptReference {
   margin: 0;
   font-size: 12px;
