@@ -108,6 +108,68 @@ function detectReportType(map: Partial<Record<keyof UsageRow, string>>): ReportT
 }
 
 /**
+ * Turn raw PapaParse results into a normalized {@link ParsedReport}.
+ * Throws an Error with a user-friendly message if the data is unusable.
+ */
+function buildParsedReport(
+  results: Papa.ParseResult<Record<string, string>>,
+  fileName: string,
+): ParsedReport {
+  const headers = (results.meta.fields ?? []).filter(Boolean);
+  if (headers.length === 0) {
+    throw new Error("No columns found. Is this a valid CSV usage report?");
+  }
+
+  const map = buildHeaderMap(headers);
+
+  if (!map.date) {
+    throw new Error(
+      "Could not find a 'date' column. Make sure this is a GitHub usage report CSV.",
+    );
+  }
+
+  const get = (row: Record<string, string>, field: keyof UsageRow) => {
+    const key = map[field];
+    return key ? row[key] : undefined;
+  };
+
+  const rows: UsageRow[] = [];
+  for (const row of results.data) {
+    const date = toStr(get(row, "date"));
+    if (!date) continue;
+    rows.push({
+      date,
+      product: toStr(get(row, "product")),
+      sku: toStr(get(row, "sku")),
+      quantity: toNumber(get(row, "quantity")),
+      unitType: toStr(get(row, "unitType")),
+      appliedCostPerQuantity: toNumber(get(row, "appliedCostPerQuantity")),
+      grossAmount: toNumber(get(row, "grossAmount")),
+      discountAmount: toNumber(get(row, "discountAmount")),
+      netAmount: toNumber(get(row, "netAmount")),
+      username: toStr(get(row, "username")) || undefined,
+      organization: toStr(get(row, "organization")) || undefined,
+      repository: toStr(get(row, "repository")) || undefined,
+      workflowPath: toStr(get(row, "workflowPath")) || undefined,
+      costCenterName: toStr(get(row, "costCenterName")) || undefined,
+      model: toStr(get(row, "model")) || undefined,
+    });
+  }
+
+  if (rows.length === 0) {
+    throw new Error("The CSV contained no usable rows.");
+  }
+
+  return {
+    rows,
+    reportType: detectReportType(map),
+    columns: headers,
+    fileName,
+    rowCount: rows.length,
+  };
+}
+
+/**
  * Parse a GitHub usage report CSV entirely in the browser.
  *
  * IMPORTANT: This must only ever run on the client. The parsed data must never
@@ -121,63 +183,7 @@ export function parseUsageCsv(file: File): Promise<ParsedReport> {
       worker: false,
       complete: (results) => {
         try {
-          const headers = (results.meta.fields ?? []).filter(Boolean);
-          if (headers.length === 0) {
-            reject(new Error("No columns found. Is this a valid CSV usage report?"));
-            return;
-          }
-
-          const map = buildHeaderMap(headers);
-
-          if (!map.date) {
-            reject(
-              new Error(
-                "Could not find a 'date' column. Make sure this is a GitHub usage report CSV.",
-              ),
-            );
-            return;
-          }
-
-          const get = (row: Record<string, string>, field: keyof UsageRow) => {
-            const key = map[field];
-            return key ? row[key] : undefined;
-          };
-
-          const rows: UsageRow[] = [];
-          for (const row of results.data) {
-            const date = toStr(get(row, "date"));
-            if (!date) continue;
-            rows.push({
-              date,
-              product: toStr(get(row, "product")),
-              sku: toStr(get(row, "sku")),
-              quantity: toNumber(get(row, "quantity")),
-              unitType: toStr(get(row, "unitType")),
-              appliedCostPerQuantity: toNumber(get(row, "appliedCostPerQuantity")),
-              grossAmount: toNumber(get(row, "grossAmount")),
-              discountAmount: toNumber(get(row, "discountAmount")),
-              netAmount: toNumber(get(row, "netAmount")),
-              username: toStr(get(row, "username")) || undefined,
-              organization: toStr(get(row, "organization")) || undefined,
-              repository: toStr(get(row, "repository")) || undefined,
-              workflowPath: toStr(get(row, "workflowPath")) || undefined,
-              costCenterName: toStr(get(row, "costCenterName")) || undefined,
-              model: toStr(get(row, "model")) || undefined,
-            });
-          }
-
-          if (rows.length === 0) {
-            reject(new Error("The CSV contained no usable rows."));
-            return;
-          }
-
-          resolve({
-            rows,
-            reportType: detectReportType(map),
-            columns: headers,
-            fileName: file.name,
-            rowCount: rows.length,
-          });
+          resolve(buildParsedReport(results, file.name));
         } catch (err) {
           reject(err instanceof Error ? err : new Error("Failed to parse CSV."));
         }
@@ -185,6 +191,21 @@ export function parseUsageCsv(file: File): Promise<ParsedReport> {
       error: (err) => reject(err),
     });
   });
+}
+
+/**
+ * Parse a GitHub usage report CSV from raw text.
+ *
+ * Used for a build-time preloaded report (see `PRELOADED_CSV_PATH`). PapaParse
+ * returns synchronously when given a string, so this runs on both the server
+ * (during static export) and the client during hydration.
+ */
+export function parseUsageCsvText(text: string, fileName: string): ParsedReport {
+  const results = Papa.parse<Record<string, string>>(text, {
+    header: true,
+    skipEmptyLines: "greedy",
+  });
+  return buildParsedReport(results, fileName);
 }
 
 export interface DailyPoint {

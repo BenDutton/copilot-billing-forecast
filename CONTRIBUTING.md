@@ -44,6 +44,15 @@ npm run dev
 
 Then open http://localhost:3000 and load a usage report CSV.
 
+### Preloading a report (optional)
+
+Drop a usage report CSV at `public/preloaded-report.csv` to ship it with the
+build. On load, `ReportProvider` (`src/components/report-provider.tsx`) fetches
+that static asset, parses it client-side, and locks the report so it cannot be
+uploaded, replaced, or cleared. If the file is absent the fetch 404s and the app
+falls back to the normal upload flow. This keeps the client-only constraint
+intact: the CSV is served as a static asset and parsed entirely in the browser.
+
 ## Development guidelines
 
 - Keep the **client-only data** constraint inviolable.

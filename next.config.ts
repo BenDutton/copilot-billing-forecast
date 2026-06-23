@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   basePath: isProd ? repoBasePath : undefined,
   assetPrefix: isProd ? `${repoBasePath}/` : undefined,
+  // Expose the base path to the client so it can fetch public assets
+  // (e.g. the optional preloaded report) at the correct URL.
+  env: {
+    NEXT_PUBLIC_BASE_PATH: isProd ? repoBasePath : "",
+  },
 };
 
 export default nextConfig;

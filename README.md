@@ -64,6 +64,24 @@ npm run dev
 
 Then open http://localhost:3000 and load a usage report CSV.
 
+### Preloading a report
+
+To ship the app with a report already loaded, drop a usage report CSV at
+`public/preloaded-report.csv`:
+
+```bash
+cp ./samples/ai-usage-sample.csv public/preloaded-report.csv
+npm run build
+```
+
+On load the app fetches that file; if present it is parsed and shown
+immediately, with uploading/replacing/clearing disabled. Everything still runs
+in the browser - the CSV is served as a static asset and parsed client-side.
+Remove the file for the normal upload experience.
+
+> Note: a file in `public/` is publicly downloadable, so only preload reports
+> you are comfortable sharing with anyone who can reach the site.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the tech stack, architecture and conventions,

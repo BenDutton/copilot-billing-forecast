@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import posthog from "posthog-js";
-import { Flash, Header, Heading, IconButton, Label, Text, Timeline } from "@primer/react";
+import { Flash, Header, Heading, IconButton, Label, Spinner, Text, Timeline } from "@primer/react";
 import {
   CopilotIcon,
   CreditCardIcon,
@@ -22,7 +22,7 @@ import styles from "./app.module.css";
 function Shell() {
   const [activeId, setActiveId] = useState(DEFAULT_TOOL_ID);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { report } = useReport();
+  const { report, loading } = useReport();
   const tool = getTool(activeId);
   const ActiveView = tool?.component;
   const toolColor = getToolColor(activeId);
@@ -126,7 +126,11 @@ function Shell() {
           )}
 
           <div className={styles.contentInner}>
-            {!report ? (
+            {loading ? (
+              <div className={styles.promptShell}>
+                <Spinner size="large" aria-label="Loading report" />
+              </div>
+            ) : !report ? (
               <GlobalUploadPrompt />
             ) : ActiveView ? (
               <div key={activeId} className={styles.toolView}>

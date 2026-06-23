@@ -17,7 +17,7 @@ const REPORT_TYPE_LABELS: Record<ParsedReport["reportType"], string> = {
 };
 
 export function CsvUploader({ compact = false }: { compact?: boolean }) {
-  const { report, setReport, clearReport } = useReport();
+  const { report, setReport, clearReport, locked } = useReport();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -80,13 +80,17 @@ export function CsvUploader({ compact = false }: { compact?: boolean }) {
         <Text className={styles.muted} style={{ fontSize: 12 }}>
           {report.rowCount.toLocaleString()} rows
         </Text>
-        <Button size="small" onClick={() => inputRef.current?.click()} disabled={busy}>
-          Replace
-        </Button>
-        <Button size="small" variant="invisible" onClick={clearReport} disabled={busy}>
-          Clear
-        </Button>
-        {hiddenInput}
+        {!locked && (
+          <>
+            <Button size="small" onClick={() => inputRef.current?.click()} disabled={busy}>
+              Replace
+            </Button>
+            <Button size="small" variant="invisible" onClick={clearReport} disabled={busy}>
+              Clear
+            </Button>
+            {hiddenInput}
+          </>
+        )}
       </div>
     );
   }
