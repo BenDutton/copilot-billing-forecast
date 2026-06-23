@@ -1,9 +1,7 @@
 "use client";
 
 import posthog from "posthog-js";
-import { Flash, Text } from "@primer/react";
 import {
-  ShieldLockIcon,
   LinkExternalIcon,
   MegaphoneIcon,
   MortarBoardIcon,
@@ -82,9 +80,11 @@ const RESOURCES: {
 export function Sidebar({
   activeId,
   onSelect,
+  toolsDisabled = false,
 }: {
   activeId: string;
   onSelect: (id: string) => void;
+  toolsDisabled?: boolean;
 }) {
   const groups = getToolsByCategory();
   return (
@@ -100,14 +100,19 @@ export function Sidebar({
             <ul className={styles.toolList}>
               {tools.map((tool) => {
                 const active = tool.id === activeId;
+                const disabled = toolsDisabled || !tool.enabled;
                 return (
-                  <li key={tool.id}>
+                  <li
+                    key={tool.id}
+                    className={disabled ? styles.toolItemLocked : undefined}
+                    data-tip={toolsDisabled ? "Upload a usage report to unlock this tool" : undefined}
+                  >
                     <button
                       type="button"
                       className={`${styles.toolItem} ${active ? styles.toolItemActive : ""}`}
                       aria-current={active ? "page" : undefined}
-                      disabled={!tool.enabled}
-                      onClick={() => tool.enabled && onSelect(tool.id)}
+                      disabled={disabled}
+                      onClick={() => !disabled && onSelect(tool.id)}
                     >
                       <span className={styles.toolIcon}>
                         <tool.icon size={16} />
@@ -170,15 +175,6 @@ export function Sidebar({
             </div>
           );
         })}
-      </div>
-
-      <div className={styles.privacyNote}>
-        <Flash variant="default">
-          <ShieldLockIcon />
-          <Text style={{ marginLeft: 8, fontSize: 12 }}>
-            Your CSV is processed locally and never leaves this browser.
-          </Text>
-        </Flash>
       </div>
 
       <div className={styles.buildInfo}>

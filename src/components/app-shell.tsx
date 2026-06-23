@@ -62,7 +62,7 @@ function Shell() {
 
       <div className={styles.appBody}>
         <aside className={`${styles.pane} ${sidebarOpen ? styles.paneOpen : ""}`}>
-          <Sidebar activeId={activeId} onSelect={handleSelect} />
+          <Sidebar activeId={activeId} onSelect={handleSelect} toolsDisabled={!report} />
         </aside>
         {sidebarOpen && (
           <div
@@ -73,33 +73,35 @@ function Shell() {
         )}
 
         <main className={styles.main}>
-          <div
-            className={styles.contentBand}
-            style={{ ["--group-color" as string]: toolColor }}
-          >
-            <div className={styles.contentBandTitle}>
-              <div className={styles.contentBandHeading}>
-                <Heading as="h1" style={{ fontSize: 20 }}>
-                  {tool?.label ?? "Toolbox"}
-                </Heading>
-                {tool && (
-                  <Label
-                    size="small"
-                    style={{
-                      borderColor: toolColor,
-                      color: toolColor,
-                    }}
-                  >
-                    {tool.category}
-                  </Label>
-                )}
+          {report && (
+            <div
+              className={styles.contentBand}
+              style={{ ["--group-color" as string]: toolColor }}
+            >
+              <div className={styles.contentBandTitle}>
+                <div className={styles.contentBandHeading}>
+                  <Heading as="h1" style={{ fontSize: 20 }}>
+                    {tool?.label ?? "Toolbox"}
+                  </Heading>
+                  {tool && (
+                    <Label
+                      size="small"
+                      style={{
+                        borderColor: toolColor,
+                        color: toolColor,
+                      }}
+                    >
+                      {tool.category}
+                    </Label>
+                  )}
+                </div>
+                <Text className={styles.muted} style={{ fontSize: 14 }}>
+                  {tool?.description}
+                </Text>
               </div>
-              <Text className={styles.muted} style={{ fontSize: 14 }}>
-                {tool?.description}
-              </Text>
+              <CsvUploader compact />
             </div>
-            {report && <CsvUploader compact />}
-          </div>
+          )}
 
           <div className={styles.contentInner}>
             {!report ? (
