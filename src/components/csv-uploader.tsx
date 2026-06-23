@@ -102,6 +102,7 @@ export function CsvUploader({ compact = false }: { compact?: boolean }) {
       className={`${styles.dropzone} ${dragging ? styles.dropzoneActive : ""}`}
       role="button"
       tabIndex={0}
+      aria-label="Upload usage report CSV"
       onClick={() => inputRef.current?.click()}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") inputRef.current?.click();

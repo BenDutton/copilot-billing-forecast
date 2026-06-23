@@ -165,28 +165,34 @@ function GlobalUploadPrompt() {
       <div className={styles.promptCard}>
         <div className={styles.promptCopy}>
           <Text className={styles.promptEyebrow}>Get started</Text>
-          <Heading as="h2" style={{ fontSize: 26, lineHeight: 1.15, margin: 0 }}>
+          <Heading as="h2" className={styles.promptHeading}>
             Upload your GitHub AI usage report CSV.
           </Heading>
-          <Text as="p" className={styles.muted} style={{ margin: 0, fontSize: 13, lineHeight: 1.5 }}>
-            To download or view an AI usage report in <strong>GitHub Enterprise</strong>, open your enterprise settings, choose <strong>Billing and licensing</strong>, select <strong>Usage</strong>, then <strong>AI usage</strong>, and press <strong>Get usage report</strong>.
+          <Text as="p" className={styles.promptLead}>
+            Analyze spend, forecast AI Credit consumption, and surface usage spikes.
           </Text>
-          <Text as="p" className={styles.promptReference}>
-            Reference: <a href="https://docs.github.com/en/enterprise-cloud@latest/billing/reference/billing-reports" target="_blank" rel="noopener noreferrer">GitHub billing reports docs</a>
-          </Text>
+          <details className={styles.promptDetails}>
+            <summary className={styles.promptSummary}>How do I get my usage report?</summary>
+            <Text as="p" className={styles.muted} style={{ margin: "10px 0 0", fontSize: 13, lineHeight: 1.5 }}>
+              To download or view an AI usage report in <strong>GitHub Enterprise</strong>, open your enterprise settings, choose <strong>Billing and licensing</strong>, select <strong>Usage</strong>, then <strong>AI usage</strong>, and press <strong>Get usage report</strong>.
+            </Text>
+            <Text as="p" className={styles.promptReference}>
+              Reference: <a href="https://docs.github.com/en/enterprise-cloud@latest/billing/reference/billing-reports" target="_blank" rel="noopener noreferrer">GitHub billing reports docs</a>
+            </Text>
+          </details>
         </div>
 
         <div className={styles.promptUpload}>
-          <Text className={styles.promptUploadLabel}>Upload CSV</Text>
           <CsvUploader />
-          <Flash variant="default" className={styles.promptAlert}>
-            <ShieldLockIcon />
-            <Text as="p" className={styles.promptAlertText}>
-              Your CSV is processed locally and never leaves this browser.
-            </Text>
-          </Flash>
         </div>
       </div>
+
+      <Flash variant="default" className={styles.promptAlert}>
+        <ShieldLockIcon size={20} />
+        <Text as="p" className={styles.promptAlertText}>
+          Your CSV is processed locally and never leaves this browser.
+        </Text>
+      </Flash>
     </div>
   );
 }
