@@ -32,20 +32,23 @@ function Shell() {
   const hadReport = useRef(false);
   useEffect(() => {
     const hasReport = !!report;
-    if (hasReport && !hadReport.current) {
+    if (hasReport && !hadReport.current && tool?.enabled) {
       // Privacy: only the stable tool id (a fixed enum) is captured - never any
-      // report contents or per-user data.
+      // report contents or per-user data. Disabled tools never emit events.
       posthog.capture("tool_viewed", { tool_id: activeId });
     }
     hadReport.current = hasReport;
-  }, [report, activeId]);
+  }, [report, activeId, tool]);
 
   const handleSelect = (id: string) => {
     setActiveId(id);
     setSidebarOpen(false);
     // Privacy: only the stable tool id (a fixed enum) is captured - never any
-    // report contents or per-user data.
-    posthog.capture("tool_viewed", { tool_id: id });
+    // report contents or per-user data. Disabled tools and the pre-upload
+    // state (no report loaded) never emit events.
+    if (report && getTool(id)?.enabled) {
+      posthog.capture("tool_viewed", { tool_id: id });
+    }
   };
 
   return (
