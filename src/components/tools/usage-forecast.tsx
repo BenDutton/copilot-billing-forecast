@@ -399,7 +399,7 @@ export function UsageForecast() {
             </div>
             <span className={styles.fieldHint}>
               {entitlement > 0
-                ? `Cap line shown on the chart at ${formatAic(entitlement)} AIC.`
+                ? `Cap line shown on the chart at ${formatAic(entitlement)}.`
                 : "Add your allowance to see the cap line and any overage."}
             </span>
           </div>
