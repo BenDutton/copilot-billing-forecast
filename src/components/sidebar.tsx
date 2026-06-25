@@ -105,7 +105,7 @@ export function Sidebar({
                   <li
                     key={tool.id}
                     className={disabled ? styles.toolItemLocked : undefined}
-                    data-tip={toolsDisabled ? "Upload a usage report to unlock this tool" : undefined}
+                    data-tip={toolsDisabled ? "Upload a usage report to use this tool" : undefined}
                   >
                     <button
                       type="button"
