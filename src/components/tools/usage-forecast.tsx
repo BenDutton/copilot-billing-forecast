@@ -88,7 +88,10 @@ export function UsageForecast() {
   const [selStart, setSelStart] = useState<string | null>(null);
   const [selEnd, setSelEnd] = useState<string | null>(null);
 
-  const entitlement = Math.max(0, Number(entitlementInput) || 0);
+  const entitlement = (() => {
+    const n = Number(entitlementInput);
+    return Number.isFinite(n) ? Math.max(0, n) : 0;
+  })();
   // Parsed scenario run rate, or null when the field is blank/non-numeric (project
   // at the fitted trend). A set value projects a flat daily rate from today onward.
   const parsedScenarioRate = Number(scenarioRateInput);

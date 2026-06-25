@@ -182,11 +182,15 @@ export function forecastDaily(series: DailyPoint[], horizonDays = 30): ForecastR
   // (which exclude the partial most-recent day when it was dropped above).
   const dailyRunRate = fitYs.reduce((a, b) => a + b, 0) / fitCount;
 
-  // Trend: compare slope magnitude over the horizon against the noise level.
-  const slopeOverHorizon = Math.abs(reg.slope) * horizonDays;
+  // Trend: compare the slope's magnitude against the noise level over a fixed
+  // window. Using a constant window (not `horizonDays`) keeps the trend stable -
+  // otherwise a zero-day horizon (e.g. on the last day of the month) would always
+  // read as "flat" regardless of the actual slope.
+  const TREND_WINDOW_DAYS = 30;
+  const slopeOverWindow = Math.abs(reg.slope) * TREND_WINDOW_DAYS;
   const noise = reg.se || dailyRunRate * 0.05;
   let trend: ForecastResult["trend"] = "flat";
-  if (slopeOverHorizon > noise) {
+  if (slopeOverWindow > noise) {
     trend = reg.slope > 0 ? "rising" : "falling";
   }
 

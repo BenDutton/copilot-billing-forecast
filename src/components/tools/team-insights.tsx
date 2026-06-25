@@ -102,7 +102,10 @@ export function TeamInsights() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const budget = Math.max(0, Number(budgetInput) || 0);
+  const budget = (() => {
+    const n = Number(budgetInput);
+    return Number.isFinite(n) ? Math.max(0, n) : 0;
+  })();
 
   // The report's latest observed day is "today"; projections run to month-end.
   const lastDay = useMemo(() => {

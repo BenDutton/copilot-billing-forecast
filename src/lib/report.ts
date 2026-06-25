@@ -485,9 +485,15 @@ export function normalizeDay(raw: string): string | null {
   const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
 
+  // Other formats (e.g. "1/31/2026") are parsed as local time. Read the calendar
+  // day back in local time too, so a midnight value isn't rolled to the previous
+  // day by a UTC conversion in timezones ahead of UTC.
   const parsed = new Date(trimmed);
   if (Number.isNaN(parsed.getTime())) return null;
-  return parsed.toISOString().slice(0, 10);
+  const y = parsed.getFullYear();
+  const m = String(parsed.getMonth() + 1).padStart(2, "0");
+  const d = String(parsed.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 export function sumMetric(rows: UsageRow[], metric: NumericMetric): number {
