@@ -3,8 +3,8 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background-color: var(--bgColor-emphasis, #1f2328);
-  color: var(--fgColor-onEmphasis, #ffffff);
+  background-color: var(--bgColor-emphasis);
+  color: var(--fgColor-onEmphasis);
   flex-shrink: 0;
 }
 
@@ -24,8 +24,8 @@
 .pane {
   width: 296px;
   flex-shrink: 0;
-  border-right: 1px solid var(--borderColor-default, #d1d9e0);
-  background-color: var(--bgColor-default, #ffffff);
+  border-right: 1px solid var(--borderColor-default);
+  background-color: var(--bgColor-default);
   overflow-y: auto;
 }
 
@@ -78,7 +78,7 @@
 
 .headerBrand {
   font-weight: 600;
-  color: var(--fgColor-onEmphasis, #ffffff);
+  color: var(--fgColor-onEmphasis);
 }
 
 .contentBand {
@@ -87,9 +87,9 @@
   gap: 16px;
   flex-wrap: wrap;
   padding: 16px 24px;
-  border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
+  border-bottom: 1px solid var(--borderColor-default);
   border-left: 4px solid var(--group-color, transparent);
-  background-color: var(--bgColor-default, #ffffff);
+  background-color: var(--bgColor-default);
   flex-shrink: 0;
 }
 
@@ -108,7 +108,7 @@
   min-height: 0;
   overflow: auto;
   padding: 24px;
-  background-color: var(--bgColor-inset, #f6f8fa);
+  background-color: var(--bgColor-inset);
 }
 
 /* Tool switch: fade and ease the new view up into place. Keyed on the active
@@ -161,7 +161,7 @@
   max-width: 1000px;
   margin: 32px auto 0;
   padding-top: 16px;
-  border-top: 1px solid var(--borderColor-default, #d1d9e0);
+  border-top: 1px solid var(--borderColor-default);
 }
 
 .promptShell {
@@ -175,9 +175,9 @@
   flex-direction: row;
   align-items: flex-start;
   gap: 32px;
-  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border: 1px solid var(--borderColor-default);
   border-radius: 12px;
-  background-color: var(--bgColor-default, #ffffff);
+  background-color: var(--bgColor-default);
   box-shadow: none;
   padding: 28px;
 }
@@ -200,14 +200,14 @@
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.01em;
-  color: var(--fgColor-default, #1f2328);
+  color: var(--fgColor-default);
 }
 
 .promptLead {
   margin: 0;
   font-size: 14px;
   line-height: 1.5;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
 }
 
 .promptDetails {
@@ -239,7 +239,7 @@
   list-style: none;
   font-size: 13px;
   font-weight: 600;
-  color: var(--fgColor-accent, #0969da);
+  color: var(--fgColor-accent);
 }
 
 .promptSummary::-webkit-details-marker {
@@ -261,7 +261,7 @@
 }
 
 .promptEyebrow {
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -273,13 +273,13 @@
   gap: 10px;
   margin: 0;
   padding: 0 0 0 18px;
-  color: var(--fgColor-default, #1f2328);
+  color: var(--fgColor-default);
   font-size: 14px;
   line-height: 1.45;
 }
 
 .promptList li::marker {
-  color: var(--fgColor-accent, #0969da);
+  color: var(--fgColor-accent);
 }
 
 .promptUpload {
@@ -301,14 +301,14 @@
   margin-top: 16px;
   padding: 12px 14px;
   border-radius: 8px;
-  background-color: var(--bgColor-accent-muted, #ddf4ff);
-  border: 1px solid color-mix(in srgb, var(--fgColor-accent, #0969da) 30%, var(--borderColor-default, #d1d9e0));
+  background-color: var(--bgColor-accent-muted);
+  border: 1px solid color-mix(in srgb, var(--fgColor-accent) 30%, var(--borderColor-default));
   box-shadow: none;
 }
 
 .promptAlert svg {
   flex-shrink: 0;
-  color: var(--fgColor-accent, #0969da);
+  color: var(--fgColor-accent);
 }
 
 .promptAlertText {
@@ -316,7 +316,7 @@
   font-size: 14px;
   font-weight: 600;
   line-height: 1.45;
-  color: var(--fgColor-default, #1f2328);
+  color: var(--fgColor-default);
 }
 
 .promptTimeline {
@@ -324,7 +324,7 @@
 }
 
 .promptTimeline [class*="TimelineBadge"] {
-  color: var(--fgColor-accent, #0969da);
+  color: var(--fgColor-accent);
 }
 
 .promptTimeline [class*="TimelineBadge"] svg {
@@ -335,18 +335,18 @@
 .promptTimeline [class*="TimelineBody"] {
   font-size: 13px;
   line-height: 1.4;
-  color: var(--fgColor-default, #1f2328);
+  color: var(--fgColor-default);
 }
 
 .promptReference {
   margin: 0;
   font-size: 12px;
   line-height: 1.45;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
 }
 
 .promptFootnote {
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   font-size: 12px;
   line-height: 1.4;
   text-align: center;
@@ -391,18 +391,18 @@
   flex-direction: column;
   gap: 6px;
   padding: 12px 14px;
-  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border: 1px solid var(--borderColor-default);
   border-radius: 8px;
-  background: var(--bgColor-muted, #f6f8fa);
+  background: var(--bgColor-muted);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
 /* Lift the active control: accent the border and add a soft focus ring so the
    field the user is interacting with is clearly the one in focus. */
 .sliderField:focus-within {
-  border-color: var(--fgColor-accent, #0969da);
-  background: var(--bgColor-default, #ffffff);
-  box-shadow: 0 0 0 3px var(--borderColor-accent-muted, rgba(9, 105, 218, 0.15));
+  border-color: var(--fgColor-accent);
+  background: var(--bgColor-default);
+  box-shadow: 0 0 0 3px var(--borderColor-accent-muted);
 }
 
 /* Small caption beneath each field describing the current effect, so the
@@ -410,7 +410,7 @@
 .fieldHint {
   font-size: 11px;
   line-height: 1.4;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
 }
 
 .fieldRow {
@@ -428,16 +428,16 @@
   height: 32px;
   padding: 0 12px;
   box-sizing: border-box;
-  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border: 1px solid var(--borderColor-default);
   border-radius: 6px;
-  background: var(--bgColor-default, #ffffff);
+  background: var(--bgColor-default);
 }
 
 .sliderControl input[type="range"] {
   flex: 1 1 auto;
   min-width: 0;
   margin: 0;
-  accent-color: var(--fgColor-accent, #0969da);
+  accent-color: var(--fgColor-accent);
 }
 
 .statGrid {
@@ -475,7 +475,7 @@
 }
 
 .miniHistLabel {
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   font-size: 11px;
   font-weight: 600;
   margin-bottom: 6px;
@@ -489,13 +489,13 @@
   gap: 2px;
   height: 52px;
   padding-bottom: 1px;
-  border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
+  border-bottom: 1px solid var(--borderColor-default);
   background-image: repeating-linear-gradient(
     to top,
     transparent,
     transparent 16px,
-    var(--borderColor-muted, #eaeef2) 16px,
-    var(--borderColor-muted, #eaeef2) 17px
+    var(--borderColor-muted) 16px,
+    var(--borderColor-muted) 17px
   );
 }
 
@@ -503,33 +503,33 @@
   flex: 1;
   min-height: 2px;
   border-radius: 2px 2px 0 0;
-  background-color: var(--bgColor-accent-emphasis, #0969da);
+  background-color: var(--bgColor-accent-emphasis);
   transition: background-color 0.12s ease;
 }
 
 .miniHistBar:hover {
-  background-color: var(--fgColor-accent, #0550ae);
+  background-color: var(--fgColor-accent);
 }
 
 /* Mini x-axis: min / mid / max spend labels under the plot. */
 .miniHistAxis {
   display: flex;
   justify-content: space-between;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   font-size: 10px;
   font-variant-numeric: tabular-nums;
   margin-top: 4px;
 }
 
 .card {
-  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border: 1px solid var(--borderColor-default);
   border-radius: var(--borderRadius-medium, 6px);
-  background-color: var(--bgColor-default, #ffffff);
+  background-color: var(--bgColor-default);
   padding: 16px;
 }
 
 .cardLabel {
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -545,7 +545,7 @@
 }
 
 .statSub {
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   font-size: 12px;
   margin-top: 4px;
 }
@@ -554,7 +554,7 @@
    table rows compact. Rendered smaller, lighter and in brackets so it reads as
    a subtle annotation rather than competing with the primary value. */
 .costInline {
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   font-size: 11px;
   font-weight: 400;
   opacity: 0.85;
@@ -594,7 +594,7 @@
 }
 
 .infoButton {
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
 }
 
 .tableScroll {
@@ -610,7 +610,7 @@
 .tableEmpty {
   padding: 24px 12px;
   text-align: center;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   font-size: 13px;
 }
 
@@ -627,38 +627,38 @@
   text-align: left;
   font-size: 12px;
   font-weight: 600;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   padding: 8px 12px;
-  background-color: var(--bgColor-default, #ffffff);
-  border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
+  background-color: var(--bgColor-default);
+  border-bottom: 1px solid var(--borderColor-default);
 }
 
 .userTable td {
   padding: 10px 12px;
-  border-bottom: 1px solid var(--borderColor-muted, #d8dee4);
+  border-bottom: 1px solid var(--borderColor-muted);
   vertical-align: top;
 }
 
 /* Zebra striping for flat tables. Hover gets a distinct shade so it reads over
    both striped and unstriped rows. */
 .zebra tbody tr:nth-child(even) {
-  background-color: var(--bgColor-muted, #f6f8fa);
+  background-color: var(--bgColor-muted);
 }
 
 /* Explicit stripe for tables with interleaved detail rows (nth-child can't be
    used there). Applied to alternating data rows by index. */
 .rowStripe {
-  background-color: var(--bgColor-muted, #f6f8fa);
+  background-color: var(--bgColor-muted);
 }
 
 .userTable tbody tr:hover {
-  background-color: var(--bgColor-muted, #f6f8fa);
+  background-color: var(--bgColor-muted);
 }
 
 .zebra tbody tr:hover {
-  background-color: var(--bgColor-neutral-muted, #eaeef2);
+  background-color: var(--bgColor-neutral-muted);
 }
 
 .numCol {
@@ -672,7 +672,7 @@
 }
 
 .overBudgetIcon {
-  color: var(--fgColor-danger, #cf222e);
+  color: var(--fgColor-danger);
   margin-right: 4px;
   vertical-align: baseline;
 }
@@ -691,7 +691,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   cursor: pointer;
 }
 
@@ -700,11 +700,11 @@
 }
 
 .sortBtn:hover {
-  color: var(--fgColor-default, #1f2328);
+  color: var(--fgColor-default);
 }
 
 .sortActive {
-  color: var(--fgColor-accent, #0969da);
+  color: var(--fgColor-accent);
 }
 
 .sortArrow {
@@ -725,7 +725,7 @@
 
 .expandIcon {
   display: inline-flex;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
 }
 
 .clickableRow {
@@ -734,16 +734,16 @@
 
 .rowOpen,
 .rowOpen:hover {
-  background-color: var(--bgColor-accent-muted, #ddf4ff) !important;
+  background-color: var(--bgColor-accent-muted) !important;
 }
 
 .detailRow td {
   padding: 0 !important;
-  background-color: var(--bgColor-inset, #f6f8fa);
+  background-color: var(--bgColor-inset);
 }
 
 .detailRow:hover {
-  background-color: var(--bgColor-inset, #f6f8fa) !important;
+  background-color: var(--bgColor-inset) !important;
 }
 
 .detailPanel {
@@ -764,7 +764,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   margin-bottom: 8px;
 }
 
@@ -777,7 +777,7 @@
 }
 
 .detailList dt {
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
 }
 
 .detailList dd {
@@ -810,7 +810,7 @@
 .modelBarTrack {
   height: 8px;
   border-radius: 4px;
-  background-color: var(--borderColor-muted, #d8dee4);
+  background-color: var(--borderColor-muted);
   overflow: hidden;
 }
 
@@ -818,13 +818,13 @@
   display: block;
   height: 100%;
   border-radius: 4px;
-  background-color: var(--fgColor-accent, #0969da);
+  background-color: var(--fgColor-accent);
 }
 
 .modelBarVal {
   white-space: nowrap;
   text-align: right;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -840,7 +840,7 @@
   flex: 1;
   height: 8px;
   border-radius: 4px;
-  background-color: var(--borderColor-muted, #d8dee4);
+  background-color: var(--borderColor-muted);
   overflow: hidden;
 }
 
@@ -877,7 +877,7 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
 }
 
 .legendSwatch {
@@ -904,7 +904,7 @@
   gap: 12px;
   padding-top: 12px;
   margin-top: 12px;
-  border-top: 1px solid var(--borderColor-muted, #d8dee4);
+  border-top: 1px solid var(--borderColor-muted);
   flex-shrink: 0;
 }
 
@@ -925,28 +925,28 @@
 }
 
 .dropzone {
-  border: 1px dashed var(--borderColor-default, #d1d9e0);
+  border: 1px dashed var(--borderColor-default);
   border-radius: 10px;
   padding: 28px 24px;
   text-align: center;
   cursor: pointer;
-  background-color: var(--bgColor-default, #ffffff);
+  background-color: var(--bgColor-default);
   transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
 }
 
 .dropzone:hover {
   transform: translateY(-1px);
-  border-color: var(--borderColor-accent-emphasis, #0969da);
+  border-color: var(--borderColor-accent-emphasis);
 }
 
 .dropzone:focus-visible {
-  outline: 2px solid var(--borderColor-accent-emphasis, #0969da);
+  outline: 2px solid var(--borderColor-accent-emphasis);
   outline-offset: 2px;
 }
 
 .dropzoneActive {
-  border-color: var(--borderColor-accent-emphasis, #0969da);
-  background-color: var(--bgColor-accent-muted, #ddf4ff);
+  border-color: var(--borderColor-accent-emphasis);
+  background-color: var(--bgColor-accent-muted);
 }
 
 .dropzoneIconWrap {
@@ -957,8 +957,8 @@
   height: 48px;
   margin: 0 auto 14px;
   border-radius: 999px;
-  color: var(--fgColor-accent, #0969da);
-  background-color: var(--bgColor-accent-muted, #ddf4ff);
+  color: var(--fgColor-accent);
+  background-color: var(--bgColor-accent-muted);
 }
 
 .dropzoneLabel {
@@ -970,7 +970,7 @@
 
 .dropzoneSubtext {
   margin: 4px 0 0;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   font-size: 13px;
 }
 
@@ -1002,7 +1002,7 @@
 }
 
 .muted {
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
 }
 
 .sidebarWrap {
@@ -1014,7 +1014,7 @@
 }
 
 .sidebarHeading {
-  color: var(--group-color, var(--fgColor-muted, #59636e));
+  color: var(--group-color, var(--fgColor-muted));
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1054,14 +1054,14 @@
   border-radius: var(--borderRadius-medium, 6px);
   background: none;
   font: inherit;
-  color: var(--fgColor-default, #1f2328);
+  color: var(--fgColor-default);
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease,
     transform 0.15s ease;
 }
 
 .toolItem:hover:not(:disabled) {
-  background-color: var(--bgColor-muted, #f6f8fa);
+  background-color: var(--bgColor-muted);
   transform: translateX(2px);
 }
 
@@ -1084,8 +1084,8 @@
   z-index: 20;
   padding: 6px 8px;
   border-radius: 6px;
-  background-color: var(--bgColor-emphasis, #1f2328);
-  color: var(--fgColor-onEmphasis, #ffffff);
+  background-color: var(--bgColor-emphasis);
+  color: var(--fgColor-onEmphasis);
   font-size: 11px;
   line-height: 1.4;
   text-align: center;
@@ -1116,7 +1116,7 @@
   bottom: 8px;
   width: 3px;
   border-radius: 3px;
-  background-color: var(--group-color, var(--fgColor-accent, #0969da));
+  background-color: var(--group-color, var(--fgColor-accent));
   transform-origin: center;
   animation: toolIndicatorIn 0.2s ease;
 }
@@ -1140,17 +1140,17 @@
   height: 28px;
   flex-shrink: 0;
   border-radius: var(--borderRadius-medium, 6px);
-  background-color: var(--bgColor-default, #ffffff);
-  border: 1px solid var(--borderColor-muted, #d8dee4);
-  color: var(--group-color, var(--fgColor-muted, #59636e));
+  background-color: var(--bgColor-default);
+  border: 1px solid var(--borderColor-muted);
+  color: var(--group-color, var(--fgColor-muted));
   transition: background-color 0.18s ease, border-color 0.18s ease,
     color 0.18s ease, transform 0.18s ease;
 }
 
 .toolItemActive .toolIcon {
-  background-color: var(--group-color, var(--fgColor-accent, #0969da));
-  border-color: var(--group-color, var(--fgColor-accent, #0969da));
-  color: var(--fgColor-onEmphasis, #ffffff);
+  background-color: var(--group-color, var(--fgColor-accent));
+  border-color: var(--group-color, var(--fgColor-accent));
+  color: var(--fgColor-onEmphasis);
   transform: scale(1.08);
 }
 
@@ -1168,13 +1168,13 @@
 }
 
 .toolItemActive .toolLabel {
-  color: var(--fgColor-accent, #0969da);
+  color: var(--fgColor-accent);
 }
 
 .toolDesc {
   font-size: 12px;
   line-height: 1.35;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
 }
 
 .buildInfo {
@@ -1182,7 +1182,7 @@
   padding-top: 12px;
   text-align: center;
   font-size: 11px;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
 }
 
 .buildInfo a {
@@ -1207,7 +1207,7 @@
 .resources {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid var(--borderColor-muted, #d8dee4);
+  border-top: 1px solid var(--borderColor-muted);
 }
 
 .resourceGroup {
@@ -1217,7 +1217,7 @@
 }
 
 .resourceSubheading {
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -1233,17 +1233,17 @@
   padding: 8px;
   border-radius: var(--borderRadius-medium, 6px);
   text-decoration: none;
-  color: var(--fgColor-default, #1f2328);
+  color: var(--fgColor-default);
   transition: background-color 0.12s ease;
 }
 
 .resourceItem:hover {
-  background-color: var(--bgColor-muted, #f6f8fa);
+  background-color: var(--bgColor-muted);
 }
 
 .resourceExternal {
   margin-left: 4px;
-  color: var(--fgColor-muted, #59636e);
+  color: var(--fgColor-muted);
   vertical-align: baseline;
 }
 
