@@ -102,11 +102,11 @@ fetch_report() {
   while IFS= read -r url; do
     [ -z "$url" ] && continue
     if [ "$first" -eq 1 ]; then
-      curl -sSL "$url" >> "$out"
+      curl -fsSL "$url" >> "$out"
       first=0
     else
       # Subsequent parts repeat the header row; drop it.
-      curl -sSL "$url" | tail -n +2 >> "$out"
+      curl -fsSL "$url" | tail -n +2 >> "$out"
     fi
   done <<< "$urls"
 

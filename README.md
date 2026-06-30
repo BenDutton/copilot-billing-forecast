@@ -124,8 +124,8 @@ jobs:
 ```
 
 `billing_token` must belong to an enterprise admin or billing manager. The
-workflow always exports the `detailed` report and, by default, the current
-calendar month (UTC); pass `month` as `MM-YY` to target a specific month.
+workflow always exports the `ai_credit` (AI usage) report type and, by default,
+the current calendar month (UTC); pass `month` as `MM-YY` to target a specific month.
 
 > ⚠️ Unlike the in-browser flow, this bakes real billing data into a static
 > site under `public/`. The report becomes downloadable by anyone who can reach
