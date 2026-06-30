@@ -54,14 +54,14 @@ jobs:
     steps:
       # Always build this app's source (not the caller's repo), so the workflow
       # works when referenced from another repository. Check out the exact
-      # version of this reusable workflow that is running (job_workflow_sha), so
+      # version of this reusable workflow that is running (job.workflow_sha), so
       # the bundled scripts match the ref the caller referenced (@main, a tag,
       # a branch, or a SHA) instead of always pulling main.
       - name: Checkout copilot-billing-forecast
         uses: actions/checkout@v4
         with:
-          repository: BenDutton/copilot-billing-forecast
-          ref: ${{ github.job_workflow_sha }}
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
 
       - name: Fetch usage report(s)
         env:
