@@ -28,6 +28,7 @@ import {
   ChevronUpIcon,
 } from "@primer/octicons-react";
 import { useReport } from "@/components/report-provider";
+import { ComparisonDelta } from "@/components/comparison-delta";
 import { usePrefersReducedMotion } from "@/components/use-prefers-reduced-motion";
 import { ExportMenu } from "@/components/export-menu";
 import { SortableTh, type SortDir } from "@/components/sortable-th";
@@ -80,7 +81,7 @@ interface DisplayRow {
 type SortKey = "model" | "totalQuantity" | "share" | "users";
 
 export function ModelBreakdown() {
-  const { report } = useReport();
+  const { report, comparisonReport } = useReport();
   const prefersReducedMotion = usePrefersReducedMotion();
   const chartRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState("");
@@ -95,6 +96,27 @@ export function ModelBreakdown() {
       return { ...m, trend: forecast?.trend ?? "flat" };
     });
   }, [report]);
+
+  // Previous-period equivalents for the comparable stat cards, derived from the
+  // optional comparison report. Null when no previous month has been added.
+  const previous = useMemo(() => {
+    if (!comparisonReport) return null;
+    const pModels = aggregateByModel(comparisonReport.rows);
+    // Per-model previous totals for the table. Auto selections are summed into a
+    // single bucket so they line up with the collapsed "Auto" row.
+    const byModel = new Map<string, number>();
+    let autoTotal = 0;
+    for (const m of pModels) {
+      byModel.set(m.model, m.totalQuantity);
+      if (isAutoModel(m.model)) autoTotal += m.totalQuantity;
+    }
+    return {
+      count: pModels.length,
+      total: pModels.reduce((a, m) => a + m.totalQuantity, 0),
+      byModel,
+      autoTotal,
+    };
+  }, [comparisonReport]);
 
   // Models with all Auto selections collapsed into a single "Auto" entry, re-ranked
   // by total. Shared by the chart, "Top model", and "Fastest growing" so they all
@@ -305,12 +327,27 @@ export function ModelBreakdown() {
           title="Models"
           info="Number of distinct models the report attributes AI Credit usage to."
           value={models.length.toLocaleString()}
+          extra={
+            previous ? (
+              <ComparisonDelta
+                current={models.length}
+                previous={previous.count}
+                tone="neutral"
+                format={(n) => n.toLocaleString()}
+              />
+            ) : undefined
+          }
         />
         <StatCard
           title="Total"
           info="Total AI Credits consumed across all models in the report."
           value={formatAic(total)}
           sub={formatUsd(total * USD_PER_AIC)}
+          extra={
+            previous ? (
+              <ComparisonDelta current={total} previous={previous.total} format={formatAic} />
+            ) : undefined
+          }
         />
         <StatCard
           title="Top model"
@@ -477,6 +514,7 @@ export function ModelBreakdown() {
                   numeric
                 />
                 <th>Trend</th>
+                {previous && <th className={styles.numCol}>vs last month</th>}
               </tr>
             </thead>
             <tbody>
@@ -531,6 +569,16 @@ export function ModelBreakdown() {
                           <span style={{ marginLeft: 4 }}>{trend.label}</span>
                         </Label>
                       </td>
+                      {previous && (
+                        <td className={styles.numCol}>
+                          <ComparisonDelta
+                            compact
+                            current={m.totalQuantity}
+                            previous={isGroup ? previous.autoTotal : previous.byModel.get(m.model) ?? 0}
+                            format={formatAic}
+                          />
+                        </td>
+                      )}
                     </tr>
                     {isOpen && (
                       <tr className={styles.detailRow}>
@@ -668,12 +716,14 @@ function StatCard({
   value,
   sub,
   valueColor,
+  extra,
 }: {
   title: string;
   info?: string;
   value: string;
   sub?: string;
   valueColor?: string;
+  extra?: React.ReactNode;
 }) {
   return (
     <div className={styles.card}>
@@ -691,6 +741,7 @@ function StatCard({
         {value}
       </div>
       {sub && <div className={styles.statSub}>{sub}</div>}
+      {extra && <div className={styles.statSub}>{extra}</div>}
     </div>
   );
 }

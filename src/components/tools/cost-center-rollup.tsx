@@ -20,6 +20,7 @@ import {
 } from "@primer/react";
 import { InfoIcon, SearchIcon } from "@primer/octicons-react";
 import { useReport } from "@/components/report-provider";
+import { ComparisonDelta } from "@/components/comparison-delta";
 import { usePrefersReducedMotion } from "@/components/use-prefers-reduced-motion";
 import { ExportMenu } from "@/components/export-menu";
 import { SortableTh, type SortDir } from "@/components/sortable-th";
@@ -69,7 +70,7 @@ function monthEndDate(lastDay: string): string {
 }
 
 export function CostCenterRollup() {
-  const { report } = useReport();
+  const { report, comparisonReport } = useReport();
   const prefersReducedMotion = usePrefersReducedMotion();
   const chartRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState("");
@@ -99,6 +100,22 @@ export function CostCenterRollup() {
       return { ...c, runRate, projectedMonth };
     });
   }, [report, daysRemaining]);
+
+  // Previous-period equivalents for the comparable stat cards, derived from the
+  // optional comparison report. Null when no previous month has been added.
+  const previous = useMemo(() => {
+    if (!comparisonReport) return null;
+    const pCenters = aggregateByCostCenter(comparisonReport.rows);
+    // Per-cost-center previous totals, keyed by name, for the breakdown table.
+    const byCenter = new Map<string, number>();
+    for (const c of pCenters) byCenter.set(c.name, c.totalQuantity);
+    return {
+      count: pCenters.length,
+      total: pCenters.reduce((a, c) => a + c.totalQuantity, 0),
+      users: pCenters.reduce((a, c) => a + c.users, 0),
+      byCenter,
+    };
+  }, [comparisonReport]);
 
   // Build the stacked-area series: top N cost centers as keys, the rest as "Other".
   const { chartData, seriesKeys } = useMemo(() => {
@@ -203,12 +220,27 @@ export function CostCenterRollup() {
           title="Cost centers"
           info="Number of distinct cost centers the report attributes usage to (including an unattributed bucket if present)."
           value={centers.length.toLocaleString()}
+          extra={
+            previous ? (
+              <ComparisonDelta
+                current={centers.length}
+                previous={previous.count}
+                tone="neutral"
+                format={(n) => n.toLocaleString()}
+              />
+            ) : undefined
+          }
         />
         <StatCard
           title="Total"
           info="Total AI Credits consumed across all cost centers in the report."
           value={formatAic(total)}
           sub={formatUsd(total * USD_PER_AIC)}
+          extra={
+            previous ? (
+              <ComparisonDelta current={total} previous={previous.total} format={formatAic} />
+            ) : undefined
+          }
         />
         <StatCard
           title="Top cost center"
@@ -220,6 +252,16 @@ export function CostCenterRollup() {
           title="Active users"
           info="Total distinct users observed across all cost centers."
           value={centers.reduce((a, c) => a + c.users, 0).toLocaleString()}
+          extra={
+            previous ? (
+              <ComparisonDelta
+                current={centers.reduce((a, c) => a + c.users, 0)}
+                previous={previous.users}
+                tone="neutral"
+                format={(n) => n.toLocaleString()}
+              />
+            ) : undefined
+          }
         />
       </div>
 
@@ -381,6 +423,7 @@ export function CostCenterRollup() {
                   onSort={toggleSort}
                   numeric
                 />
+                {previous && <th className={styles.numCol}>vs last month</th>}
               </tr>
             </thead>
             <tbody>
@@ -414,12 +457,22 @@ export function CostCenterRollup() {
                       {formatAic(c.projectedMonth)}
                       <span className={styles.costInline}>{formatUsd(c.projectedMonth * USD_PER_AIC)}</span>
                     </td>
+                    {previous && (
+                      <td className={styles.numCol}>
+                        <ComparisonDelta
+                          compact
+                          current={c.totalQuantity}
+                          previous={previous.byCenter.get(c.name) ?? 0}
+                          format={formatAic}
+                        />
+                      </td>
+                    )}
                   </tr>
                 );
               })}
               {tableCenters.length === 0 && (
                 <tr>
-                  <td colSpan={7} className={styles.tableEmpty}>
+                  <td colSpan={previous ? 8 : 7} className={styles.tableEmpty}>
                     No cost centers match “{filter}”.
                   </td>
                 </tr>
@@ -487,11 +540,13 @@ function StatCard({
   info,
   value,
   sub,
+  extra,
 }: {
   title: string;
   info?: string;
   value: string;
   sub?: string;
+  extra?: React.ReactNode;
 }) {
   return (
     <div className={styles.card}>
@@ -507,6 +562,7 @@ function StatCard({
       </div>
       <div className={styles.statValue}>{value}</div>
       {sub && <div className={styles.statSub}>{sub}</div>}
+      {extra && <div className={styles.statSub}>{extra}</div>}
     </div>
   );
 }

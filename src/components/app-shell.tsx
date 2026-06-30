@@ -124,7 +124,10 @@ function Shell() {
                   {tool?.description}
                 </Text>
               </div>
-              <CsvUploader compact />
+              <div className={styles.bandUploaders}>
+                <CsvUploader compact />
+                <CsvUploader compact slot="comparison" />
+              </div>
             </div>
           )}
 

@@ -28,9 +28,10 @@ import {
   AlertIcon,
 } from "@primer/octicons-react";
 import { useReport } from "@/components/report-provider";
+import { ComparisonDelta } from "@/components/comparison-delta";
 import { usePrefersReducedMotion } from "@/components/use-prefers-reduced-motion";
 import { ExportMenu } from "@/components/export-menu";
-import { aggregateDaily, dayContributions } from "@/lib/report";
+import { aggregateDaily, dayContributions, sumMetric, activeDays } from "@/lib/report";
 import { detectSpikes } from "@/lib/forecast";
 import styles from "../app.module.css";
 
@@ -45,7 +46,7 @@ const SENSITIVITY: Record<string, { label: string; z: number }> = {
 const SENS_ORDER = ["high", "medium", "low"] as const;
 
 export function SpikeDetection() {
-  const { report } = useReport();
+  const { report, comparisonReport } = useReport();
   const prefersReducedMotion = usePrefersReducedMotion();
   const [sensitivity, setSensitivity] = useState<string>("medium");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -72,6 +73,15 @@ export function SpikeDetection() {
     () => (report ? dayContributions(report.rows) : new Map()),
     [report],
   );
+
+  // Previous-period baseline run rate (avg AI Credits per active day), derived
+  // from the optional comparison report. Null when no previous month is added.
+  const previousBaseline = useMemo(() => {
+    if (!comparisonReport) return null;
+    const total = sumMetric(comparisonReport.rows, "quantity");
+    const days = activeDays(comparisonReport.rows);
+    return days > 0 ? total / days : 0;
+  }, [comparisonReport]);
 
   if (!report) return null;
 
@@ -177,6 +187,15 @@ export function SpikeDetection() {
           info="Average AI Credits per day across the whole report - the expected daily level."
           value={`${formatAic(analysis.baselineRunRate)}/day`}
           sub={`${formatUsd(analysis.baselineRunRate * USD_PER_AIC)}/day`}
+          extra={
+            previousBaseline != null ? (
+              <ComparisonDelta
+                current={analysis.baselineRunRate}
+                previous={previousBaseline}
+                format={(n) => `${formatAic(n)}/day`}
+              />
+            ) : undefined
+          }
         />
         <StatCard
           title="Biggest spike"

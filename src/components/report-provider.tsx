@@ -17,6 +17,14 @@ interface ReportContextValue {
   setReport: (report: ParsedReport | null) => void;
   clearReport: () => void;
   /**
+   * Optional previous-period report used for month-over-month comparison.
+   * Like {@link report}, it is held in memory on the client only and never
+   * persisted or sent anywhere.
+   */
+  comparisonReport: ParsedReport | null;
+  setComparisonReport: (report: ParsedReport | null) => void;
+  clearComparisonReport: () => void;
+  /**
    * True when the report was preloaded with the build. In this mode the user
    * cannot upload, replace, or clear the report.
    */
@@ -36,6 +44,7 @@ const ReportContext = createContext<ReportContextValue | null>(null);
  */
 export function ReportProvider({ children }: { children: React.ReactNode }) {
   const [report, setReport] = useState<ParsedReport | null>(null);
+  const [comparisonReport, setComparisonReport] = useState<ParsedReport | null>(null);
   const [locked, setLocked] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -65,12 +74,27 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
     () => ({
       report,
       // In locked mode the report is fixed; ignore attempts to change it.
-      setReport: locked ? () => {} : setReport,
-      clearReport: locked ? () => {} : () => setReport(null),
+      setReport: locked
+        ? () => {}
+        : (next) => {
+            setReport(next);
+            // Clearing or replacing the primary report drops the comparison so
+            // the two never get out of sync.
+            if (!next) setComparisonReport(null);
+          },
+      clearReport: locked
+        ? () => {}
+        : () => {
+            setReport(null);
+            setComparisonReport(null);
+          },
+      comparisonReport,
+      setComparisonReport: locked ? () => {} : setComparisonReport,
+      clearComparisonReport: locked ? () => {} : () => setComparisonReport(null),
       locked,
       loading,
     }),
-    [report, locked, loading],
+    [report, comparisonReport, locked, loading],
   );
 
   return <ReportContext.Provider value={value}>{children}</ReportContext.Provider>;

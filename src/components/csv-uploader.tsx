@@ -16,8 +16,25 @@ const REPORT_TYPE_LABELS: Record<ParsedReport["reportType"], string> = {
   unknown: "Usage report",
 };
 
-export function CsvUploader({ compact = false }: { compact?: boolean }) {
-  const { report, setReport, clearReport, locked } = useReport();
+/**
+ * Which report slot this uploader controls: the main report, or the optional
+ * previous-period report used for month-over-month comparison.
+ */
+type UploaderSlot = "primary" | "comparison";
+
+export function CsvUploader({
+  compact = false,
+  slot = "primary",
+}: {
+  compact?: boolean;
+  slot?: UploaderSlot;
+}) {
+  const ctx = useReport();
+  const isComparison = slot === "comparison";
+  const report = isComparison ? ctx.comparisonReport : ctx.report;
+  const setReport = isComparison ? ctx.setComparisonReport : ctx.setReport;
+  const clearReport = isComparison ? ctx.clearComparisonReport : ctx.clearReport;
+  const { locked } = ctx;
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -38,6 +55,7 @@ export function CsvUploader({ compact = false }: { compact?: boolean }) {
         posthog.capture("csv_uploaded", {
           report_type: parsed.reportType,
           row_count: parsed.rowCount,
+          slot,
         });
         toast.success(
           `Loaded ${parsed.rowCount.toLocaleString()} rows - ${REPORT_TYPE_LABELS[parsed.reportType]}`,
@@ -48,7 +66,7 @@ export function CsvUploader({ compact = false }: { compact?: boolean }) {
         setBusy(false);
       }
     },
-    [setReport],
+    [setReport, slot],
   );
 
   const onDrop = useCallback(
@@ -70,9 +88,35 @@ export function CsvUploader({ compact = false }: { compact?: boolean }) {
     />
   );
 
-  if (compact && report) {
+  if (compact) {
+    // Comparison slot with nothing loaded yet: a slim affordance to add the
+    // previous period's CSV so usage can be compared month over month.
+    if (!report) {
+      if (locked) return null;
+      return (
+        <div className={styles.uploaderCompact}>
+          <Text className={styles.muted} style={{ fontSize: 12 }}>
+            Compare to previous month
+          </Text>
+          <Button
+            size="small"
+            leadingVisual={UploadIcon}
+            onClick={() => inputRef.current?.click()}
+            disabled={busy}
+          >
+            {busy ? "Parsing…" : "Add previous month CSV"}
+          </Button>
+          {hiddenInput}
+        </div>
+      );
+    }
     return (
       <div className={styles.uploaderCompact}>
+        {isComparison && (
+          <Text className={styles.muted} style={{ fontSize: 12 }}>
+            Previous month
+          </Text>
+        )}
         <Label size="large" className={styles.uploaderFileLabel}>
           <FileIcon />
           <span style={{ marginLeft: 4 }}>{report.fileName}</span>
