@@ -21,10 +21,11 @@ import {
   InfoIcon,
 } from "@primer/octicons-react";
 import { useReport } from "@/components/report-provider";
+import { ComparisonDelta } from "@/components/comparison-delta";
 import { usePrefersReducedMotion } from "@/components/use-prefers-reduced-motion";
 import { ExportMenu } from "@/components/export-menu";
 import { usePersistentState } from "@/components/use-persistent-state";
-import { aggregateDaily, sumMetric } from "@/lib/report";
+import { aggregateDaily, sumMetric, activeDays } from "@/lib/report";
 import { forecastDaily } from "@/lib/forecast";
 import styles from "../app.module.css";
 
@@ -38,6 +39,7 @@ const SELECTION_COLOR = "#0969da";
  * coloured line is the projection (the observed trend, or your scenario rate). */
 const FORECAST_COLOR = "#8250df"; // projection / scenario run-rate line
 const BASELINE_COLOR = "#57606a"; // data-driven baseline shown for comparison
+const PREV_MONTH_COLOR = "#9a6700"; // previous month's cumulative usage line
 
 /**
  * Days from the last observed day through the end of that calendar month.
@@ -69,7 +71,7 @@ interface RangeSelection {
 }
 
 export function UsageForecast() {
-  const { report } = useReport();
+  const { report, comparisonReport } = useReport();
   const prefersReducedMotion = usePrefersReducedMotion();
   const [entitlementInput, setEntitlementInput] = usePersistentState(
     "usage-forecast:entitlement",
@@ -102,6 +104,38 @@ export function UsageForecast() {
     () => (report ? aggregateDaily(report.rows, "quantity") : []),
     [report],
   );
+
+  // Previous-period equivalents for the comparable stat cards, derived from the
+  // optional comparison report. Null when no previous month has been added.
+  const previous = useMemo(() => {
+    if (!comparisonReport) return null;
+    const total = sumMetric(comparisonReport.rows, "quantity");
+    const days = activeDays(comparisonReport.rows);
+    return { total, runRate: days > 0 ? total / days : 0 };
+  }, [comparisonReport]);
+
+  // Previous month's cumulative AI Credits indexed by day-of-month (1-31), so it
+  // can be overlaid on the current month's chart aligned by calendar day. Days
+  // before the previous month's first active day read 0; later days carry the
+  // last known running total forward. Null when no previous month is added.
+  const prevMonthCumulative = useMemo(() => {
+    if (!comparisonReport) return null;
+    const pd = aggregateDaily(comparisonReport.rows, "quantity");
+    if (pd.length === 0) return null;
+    const byDom = new Map<number, number>();
+    let run = 0;
+    for (const p of pd) {
+      run += p.value;
+      byDom.set(Number(p.date.slice(8, 10)), run);
+    }
+    const carry: number[] = [];
+    let last = 0;
+    for (let d = 1; d <= 31; d++) {
+      if (byDom.has(d)) last = byDom.get(d)!;
+      carry[d] = last;
+    }
+    return carry;
+  }, [comparisonReport]);
 
   const forecast = useMemo(() => {
     if (!daily.length) return null;
@@ -138,6 +172,9 @@ export function UsageForecast() {
           forecastLine: anchor ? round2(runA) : null,
           baselineLine: anchor ? round2(runA) : null,
           band: anchor ? ([round2(runA), round2(runA)] as [number, number]) : null,
+          prevMonth: prevMonthCumulative
+            ? round2(prevMonthCumulative[Number(p.date.slice(8, 10))] ?? 0)
+            : null,
         };
       }
       if (i === obs) {
@@ -164,9 +201,12 @@ export function UsageForecast() {
         forecastLine: round2(runF),
         baselineLine: round2(runBase),
         band: [round2(runL), round2(runU)] as [number, number],
+        prevMonth: prevMonthCumulative
+          ? round2(prevMonthCumulative[Number(p.date.slice(8, 10))] ?? 0)
+          : null,
       };
     });
-  }, [forecast, scenarioRate]);
+  }, [forecast, scenarioRate, prevMonthCumulative]);
 
   // Summary of the dragged range: the cumulative AIC consumed between the two
   // selected dates (the `forecast` series carries the running total for both
@@ -279,7 +319,7 @@ export function UsageForecast() {
   // tallest plotted value, with a little headroom so its label isn't clipped.
   const dataMax = cumulativeData.reduce((max, d) => {
     const hi = Array.isArray(d.band) ? d.band[1] : 0;
-    return Math.max(max, d.actual ?? 0, d.forecast ?? 0, hi);
+    return Math.max(max, d.actual ?? 0, d.forecast ?? 0, hi, d.prevMonth ?? 0);
   }, 0);
   const yMax = Math.ceil(Math.max(dataMax, entitlement) * 1.05);
 
@@ -413,6 +453,11 @@ export function UsageForecast() {
           info="Total AI Credits already consumed in the uploaded report, summed across all rows."
           value={formatAic(observed)}
           sub={`${forecast.observedDays} days · ${formatUsd(observed * USD_PER_AIC)}`}
+          extra={
+            previous ? (
+              <ComparisonDelta current={observed} previous={previous.total} format={formatAic} />
+            ) : undefined
+          }
         />
         <StatCard
           title="Daily run rate"
@@ -423,6 +468,15 @@ export function UsageForecast() {
               ? `Baseline ${formatAic(forecast.dailyRunRate)}/day`
               : `${formatUsd(forecast.dailyRunRate * USD_PER_AIC)}/day`
           }
+          extra={
+            previous ? (
+              <ComparisonDelta
+                current={forecast.dailyRunRate}
+                previous={previous.runRate}
+                format={(n) => `${formatAic(n)}/day`}
+              />
+            ) : undefined
+          }
         />
         <StatCard
           title={isScenario ? "Scenario month total" : "Projected month total"}
@@ -431,6 +485,13 @@ export function UsageForecast() {
           sub={`${formatAic(projectedEndLower)} – ${formatAic(projectedEndUpper)}`}
           extra={
             <>
+              {previous && (
+                <ComparisonDelta
+                  current={projectedEnd}
+                  previous={previous.total}
+                  format={formatAic}
+                />
+              )}
               <span
                 style={{
                   display: "block",
@@ -607,6 +668,19 @@ export function UsageForecast() {
                 {...chartAnim}
                 name="forecast"
               />
+              {prevMonthCumulative && (
+                <Line
+                  type="monotone"
+                  dataKey="prevMonth"
+                  stroke={PREV_MONTH_COLOR}
+                  strokeWidth={1.5}
+                  strokeDasharray="2 3"
+                  dot={false}
+                  connectNulls
+                  {...chartAnim}
+                  name="prevMonth"
+                />
+              )}
               <Line
                 type="monotone"
                 dataKey="actual"
@@ -664,6 +738,15 @@ export function UsageForecast() {
             <span className={styles.legendSwatch} style={{ backgroundColor: FORECAST_COLOR }} />
             {projectionLabel}
           </span>
+          {prevMonthCumulative && (
+            <span className={styles.legendItem}>
+              <span
+                className={styles.legendSwatch}
+                style={{ backgroundColor: PREV_MONTH_COLOR }}
+              />
+              Last month
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -695,6 +778,7 @@ function CapTooltip({
   const forecast = find("forecastLine") as number | undefined;
   const baseline = find("baselineLine") as number | undefined;
   const band = find("band") as [number, number] | undefined;
+  const prevMonth = find("prevMonth") as number | null | undefined;
 
   const isProjected = actual == null;
   const value = (actual ?? forecast ?? 0) as number;
@@ -730,6 +814,17 @@ function CapTooltip({
       {isProjected && band && (
         <div className={styles.muted}>
           Range: {formatAic(band[0])} – {formatAic(band[1])}
+        </div>
+      )}
+      {prevMonth != null && (
+        <div className={styles.muted}>
+          Last month: {formatAic(prevMonth)}
+          {(() => {
+            const diff = value - prevMonth;
+            const sign = diff >= 0 ? "+" : "−";
+            const pct = prevMonth > 0 ? ` (${sign}${Math.round((Math.abs(diff) / prevMonth) * 100)}%)` : "";
+            return ` · ${sign}${formatAic(Math.abs(diff))}${pct}`;
+          })()}
         </div>
       )}
       {selDiff != null && (

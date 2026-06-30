@@ -504,3 +504,13 @@ export function formatMetric(value: number, metric: NumericMetric): string {
     maximumFractionDigits: 2,
   }).format(value);
 }
+
+/** Number of distinct active (UTC) days present in a set of rows. */
+export function activeDays(rows: UsageRow[]): number {
+  const days = new Set<string>();
+  for (const row of rows) {
+    const day = normalizeDay(row.date);
+    if (day) days.add(day);
+  }
+  return days.size;
+}

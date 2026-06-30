@@ -9,6 +9,29 @@ monthly projections run to the end of the calendar month containing the report's
 latest day, because GitHub AI Credit entitlements reset monthly. Always refer to your
 GitHub billing statements as the source of truth.
 
+## Compare to the previous month
+
+Alongside the main report you can add a **previous month's** CSV (the "Add previous
+month CSV" control next to the loaded report). When present, the comparable summary
+stat cards in each tool gain a **"vs last month"** line showing the percentage change,
+with the previous figure on hover. An increase in spend or usage is shown in red and a
+decrease in green; plain counts stay neutral. Covered cards include:
+
+- **Usage Forecast** — observed total, daily run rate, and projected month total.
+  The chart also overlays the previous month's cumulative usage as a dashed line.
+- **Team Insights** — users, team total, and average per user. The "Average usage by
+  user group" and "Per-user insights & budget forecast" tables gain a **Last month**
+  column showing each group's / user's previous total with the change.
+- **Model Breakdown** — models and total. The breakdown table gains a **vs last month**
+  column showing each model's increase or decrease.
+- **Cost Center Rollup** — cost centers, total, and active users. The breakdown table
+  gains a **vs last month** column showing each cost center's increase or decrease.
+- **Spike Detection** — the baseline run rate.
+
+Like the main report, the comparison CSV is parsed and held **in memory in your
+browser only**; it is never persisted or sent anywhere. Clearing or replacing the main
+report also clears the comparison.
+
 - [Usage Forecast](#usage-forecast) — _Forecasting_
 - [Team Insights](#team-insights) — _Breakdowns_
 - [Model Breakdown](#model-breakdown) — _Breakdowns_

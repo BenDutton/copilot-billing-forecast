@@ -43,6 +43,11 @@ tools below without your data ever leaving your device.
 - **Spike Detection** - Flag days with anomalous usage above the trend.
 - **Cost Center Rollup** - Roll up AI Credit usage and budgets by cost center.
 
+You can also add a **previous month's** CSV to compare against. The comparable summary
+stat cards in each tool then gain a "vs last month" line showing the percentage change
+(observed total, run rate, totals, user and model counts, and more). The comparison
+report stays in memory in your browser, the same as the main report.
+
 For what each tool shows, how to read it, and its key assumptions, see
 [docs/tools.md](docs/tools.md).
 

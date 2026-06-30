@@ -21,6 +21,7 @@ import {
   AlertIcon,
 } from "@primer/octicons-react";
 import { useReport } from "@/components/report-provider";
+import { ComparisonDelta } from "@/components/comparison-delta";
 import { ExportMenu } from "@/components/export-menu";
 import { usePersistentState } from "@/components/use-persistent-state";
 import { SortableTh, type SortDir } from "@/components/sortable-th";
@@ -92,7 +93,7 @@ type SortKey =
   | "utilization";
 
 export function TeamInsights() {
-  const { report } = useReport();
+  const { report, comparisonReport } = useReport();
   const [budgetInput, setBudgetInput] = usePersistentState(
     "team-insights:budget",
   );
@@ -131,6 +132,33 @@ export function TeamInsights() {
   }, [report, daysRemaining]);
 
   const usageGroups = useMemo(() => classifyUsageGroups(users), [users]);
+
+  // Previous-period equivalents for the comparable stat cards, derived from the
+  // optional comparison report. Null when no previous month has been added.
+  const previous = useMemo(() => {
+    if (!comparisonReport) return null;
+    const pUsers = aggregateByUser(comparisonReport.rows);
+    const total = pUsers.reduce((a, u) => a + u.totalQuantity, 0);
+    // Per-user previous totals, keyed by username, for the per-user table.
+    const userTotals = new Map<string, number>();
+    for (const u of pUsers) userTotals.set(u.username, u.totalQuantity);
+    // Previous usage-group totals, keyed by group, for the user-group table.
+    // `classifyUsageGroups` only reads `.totalQuantity`, so the run-rate and
+    // projection fields can be zero-filled.
+    const prevGroupTotals = new Map<string, number>();
+    for (const g of classifyUsageGroups(
+      pUsers.map((u) => ({ ...u, runRate: 0, projectedMonth: 0 })),
+    )) {
+      prevGroupTotals.set(g.key, g.totalQuantity);
+    }
+    return {
+      users: pUsers.length,
+      total,
+      avg: pUsers.length ? total / pUsers.length : 0,
+      userTotals,
+      groupTotals: prevGroupTotals,
+    };
+  }, [comparisonReport]);
 
   const sortedUsers = useMemo<UserRow[]>(() => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -270,6 +298,16 @@ export function TeamInsights() {
               </span>
             </div>
             <div className={styles.statValue}>{totalUsers.toLocaleString()}</div>
+            {previous && (
+              <div className={styles.statSub}>
+                <ComparisonDelta
+                  current={totalUsers}
+                  previous={previous.users}
+                  tone="neutral"
+                  format={(n) => n.toLocaleString()}
+                />
+              </div>
+            )}
           </div>
           <SpendHistogram users={users} />
         </div>
@@ -278,12 +316,26 @@ export function TeamInsights() {
           info="Total AI Credits consumed across all users in the report."
           value={formatAic(totalAic)}
           sub={formatUsd(totalAic * USD_PER_AIC)}
+          extra={
+            previous ? (
+              <ComparisonDelta current={totalAic} previous={previous.total} format={formatAic} />
+            ) : undefined
+          }
         />
         <StatCard
           title="Avg per user"
           info="Mean AI Credits per user across the report period."
           value={formatAic(totalUsers ? totalAic / totalUsers : 0)}
           sub={formatUsd((totalUsers ? totalAic / totalUsers : 0) * USD_PER_AIC)}
+          extra={
+            previous ? (
+              <ComparisonDelta
+                current={totalUsers ? totalAic / totalUsers : 0}
+                previous={previous.avg}
+                format={formatAic}
+              />
+            ) : undefined
+          }
         />
         {budget > 0 ? (
           <StatCard
@@ -335,6 +387,7 @@ export function TeamInsights() {
                 <th className={styles.numCol}>Avg usage</th>
                 <th className={styles.numCol}>Median usage</th>
                 <th className={styles.numCol}>Group total</th>
+                {previous && <th className={styles.numCol}>Last month</th>}
               </tr>
             </thead>
             <tbody>
@@ -385,6 +438,26 @@ export function TeamInsights() {
                       "\u2014"
                     )}
                   </td>
+                  {previous &&
+                    (() => {
+                      const prev = previous.groupTotals.get(g.key) ?? 0;
+                      return (
+                        <td className={styles.numCol}>
+                          {formatAic(prev)}
+                          <span className={styles.costInline}>
+                            {formatUsd(prev * USD_PER_AIC)}
+                          </span>
+                          <div>
+                            <ComparisonDelta
+                              compact
+                              current={g.totalQuantity}
+                              previous={prev}
+                              format={formatAic}
+                            />
+                          </div>
+                        </td>
+                      );
+                    })()}
                 </tr>
               ))}
             </tbody>
@@ -499,6 +572,7 @@ export function TeamInsights() {
                     onSort={toggleSort}
                   />
                 )}
+                {previous && <th className={styles.numCol}>Last month</th>}
               </tr>
             </thead>
             <tbody>
@@ -558,6 +632,26 @@ export function TeamInsights() {
                           <UtilizationBar pct={util} />
                         </td>
                       )}
+                      {previous &&
+                        (() => {
+                          const prev = previous.userTotals.get(u.username) ?? 0;
+                          return (
+                            <td className={styles.numCol}>
+                              {formatAic(prev)}
+                              <span className={styles.costInline}>
+                                {formatUsd(prev * USD_PER_AIC)}
+                              </span>
+                              <div>
+                                <ComparisonDelta
+                                  compact
+                                  current={u.totalQuantity}
+                                  previous={prev}
+                                  format={formatAic}
+                                />
+                              </div>
+                            </td>
+                          );
+                        })()}
                     </tr>
                     {isOpen && (
                       <tr className={styles.detailRow}>

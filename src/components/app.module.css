@@ -991,6 +991,15 @@
   flex-wrap: wrap;
 }
 
+/* Stack the primary and comparison (previous month) uploaders in the content
+   band so they read as two distinct slots rather than one busy row. */
+.bandUploaders {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
 .uploaderFileLabel {
   max-width: 100%;
 }
@@ -1275,4 +1284,23 @@
     min-width: 0;
     max-width: none;
   }
+}
+
+/* "vs last month" delta line shown inside a stat card when a previous-period
+   report has been added. Inherits the muted statSub sizing; the tone modifiers
+   recolour it. Rising usage is "danger" (more spend) to match the forecast tool. */
+.comparisonDelta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.deltaUp {
+  color: var(--fgColor-danger, #cf222e);
+}
+
+.deltaDown {
+  color: var(--fgColor-success, #1a7f37);
 }
