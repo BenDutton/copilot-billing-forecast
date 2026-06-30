@@ -97,8 +97,35 @@ jobs:
 
 ## Inputs
 
-The workflow always exports the `ai_credit` (AI usage) report type. By default it fetches
-the current calendar month (UTC); pass `month` as `MM-YY` (e.g. `06-26`) to
-target a specific month — the first and last day are derived automatically. See
-the [reusable workflow](../.github/workflows/auto-report-pages.yml) for the full
-list of inputs.
+The workflow always exports the `ai_credit` (AI usage) report type. By default it
+fetches the current calendar month (UTC); pass `month` as `MM-YY` (e.g. `06-26`)
+to target a specific month — the first and last day are derived automatically.
+
+### Inputs (`with`)
+
+| Name | Type | Required | Default | Description |
+| --- | --- | --- | --- | --- |
+| `enterprise` | string | Yes | — | Enterprise slug to fetch the usage report for (the value in `github.com/enterprises/<slug>`, not an organization name). |
+| `month` | string | No | `""` (current month, UTC) | Report month as `MM-YY` (e.g. `06-26`). The first and last day of the month are derived automatically. |
+| `include_previous_period` | boolean | No | `false` | Also fetch the previous calendar month as the comparison report (`public/preloaded-report-previous.csv`). |
+
+### Secrets
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `billing_token` | Yes | Token for an enterprise admin or billing manager with access to the billing usage reports API. See [Creating the `BILLING_TOKEN`](#creating-the-billing_token). |
+
+### Permissions
+
+The caller workflow must grant these permissions so the reusable workflow can
+publish to GitHub Pages:
+
+| Permission | Level | Why |
+| --- | --- | --- |
+| `contents` | `read` | Check out the app source to build it. |
+| `pages` | `write` | Publish the built site to GitHub Pages. |
+| `id-token` | `write` | OIDC token used by the Pages deployment. |
+
+See the [reusable workflow](../.github/workflows/auto-report-pages.yml) for the
+authoritative definition.
+
