@@ -54,31 +54,15 @@ report on a daily schedule and on demand, then redeploys to GitHub Pages:
 ```yaml
 # .github/workflows/scheduled-report.yml
 #
-# Example caller for the reusable `auto-report-pages.yml` workflow.
-#
-# It fetches the enterprise usage report from the billing API and redeploys the
-# app to GitHub Pages on a schedule (and on demand). Set the `ENTERPRISE`
-# repository variable and the `BILLING_TOKEN` secret (an enterprise admin or
-# billing manager token) before enabling it.
+# Example caller for the reusable `auto-report-pages.yml` workflow. Set the
+# `ENTERPRISE` repository variable and the `BILLING_TOKEN` secret first.
 name: Scheduled usage report deploy
 
 on:
-  # Refresh every morning at 06:00 UTC. Adjust or remove as needed.
   schedule:
-    - cron: "0 6 * * *"
-  # Allow manual runs, overriding the month and comparison toggle if desired.
-  workflow_dispatch:
-    inputs:
-      month:
-        description: "Report month as MM-YY (e.g. 06-26). Defaults to the current month."
-        type: string
-        default: ""
-      include_previous_period:
-        description: "Also preload the previous calendar month for comparison."
-        type: boolean
-        default: true
+    - cron: "0 6 * * *" # Every day at 06:00 UTC
+  workflow_dispatch: # Allow manual runs
 
-# Required to publish to GitHub Pages from the called workflow.
 permissions:
   contents: read
   pages: write
@@ -89,8 +73,6 @@ jobs:
     uses: BenDutton/copilot-billing-forecast/.github/workflows/auto-report-pages.yml@main
     with:
       enterprise: ${{ vars.ENTERPRISE }}
-      month: ${{ inputs.month || '' }}
-      include_previous_period: ${{ inputs.include_previous_period == true || github.event_name == 'schedule' }}
     secrets:
       billing_token: ${{ secrets.BILLING_TOKEN }}
 ```
