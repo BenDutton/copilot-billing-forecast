@@ -97,6 +97,41 @@ npm run build
 > Note: a file in `public/` is publicly downloadable, so only preload reports
 > you are comfortable sharing with anyone who can reach the site.
 
+### Automated deployment from the billing API
+
+A reusable GitHub Actions workflow,
+[.github/workflows/auto-report-pages.yml](.github/workflows/auto-report-pages.yml),
+can fetch an enterprise usage report directly from the
+[billing usage reports REST API](https://docs.github.com/en/enterprise-cloud@latest/rest/billing/usage-reports),
+write it to `public/preloaded-report.csv` (and optionally the previous calendar
+month to `public/preloaded-report-previous.csv`), then build and deploy the app
+to GitHub Pages with the report already loaded and locked.
+
+Call it from your own workflow (see
+[docs/automated-deployment.md](docs/automated-deployment.md) for a scheduled
+example and the full list of inputs):
+
+```yaml
+jobs:
+  deploy:
+    uses: BenDutton/copilot-billing-forecast/.github/workflows/auto-report-pages.yml@main
+    with:
+      enterprise: my-enterprise-slug
+      month: "06-26" # optional MM-YY; defaults to the current month
+      include_previous_period: true
+    secrets:
+      billing_token: ${{ secrets.BILLING_TOKEN }}
+```
+
+`billing_token` must belong to an enterprise admin or billing manager. The
+workflow always exports the `detailed` report and, by default, the current
+calendar month (UTC); pass `month` as `MM-YY` to target a specific month.
+
+> ⚠️ Unlike the in-browser flow, this bakes real billing data into a static
+> site under `public/`. The report becomes downloadable by anyone who can reach
+> the Pages URL, so only use this with a **private/Enterprise Pages site or an
+> internal, access-restricted repository**.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the tech stack, architecture and conventions,

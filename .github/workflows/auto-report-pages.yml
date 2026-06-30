@@ -1,0 +1,103 @@
+# Reusable workflow: fetch an enterprise usage report via the GitHub billing
+# REST API, preload it into the build, and publish the app to GitHub Pages.
+#
+# It automates the "Preloading a report" flow documented in the README: the
+# fetched CSV is written to `public/preloaded-report.csv` (and, optionally, the
+# previous calendar month to `public/preloaded-report-previous.csv`), so the
+# deployed app opens with the report already loaded and locked.
+#
+# Privacy note: a file under `public/` is baked into the static site and is
+# downloadable by anyone who can reach the Pages URL. Only deploy to a Pages
+# site whose audience is allowed to see this billing data (e.g. a private
+# Enterprise Pages site, or an internal/restricted repository).
+#
+# API reference:
+# https://docs.github.com/en/enterprise-cloud@latest/rest/billing/usage-reports
+name: Fetch usage report and deploy to GitHub Pages
+
+on:
+  workflow_call:
+    inputs:
+      enterprise:
+        description: "Enterprise slug to fetch the usage report for."
+        required: true
+        type: string
+      month:
+        description: "Report month as MM-YY (e.g. 06-26). Defaults to the current month (UTC). The first and last day of the month are derived automatically."
+        required: false
+        type: string
+        default: ""
+      include_previous_period:
+        description: "Also fetch the previous calendar month as the comparison (preloaded-report-previous.csv)."
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      billing_token:
+        description: "Token for an enterprise admin or billing manager with access to the billing usage reports API."
+        required: true
+
+# Permissions required to publish to GitHub Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment; let in-progress production deploys finish.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Always build this app's source (not the caller's repo), so the workflow
+      # works when referenced from another repository.
+      - name: Checkout copilot-billing-forecast
+        uses: actions/checkout@v4
+        with:
+          repository: BenDutton/copilot-billing-forecast
+          ref: main
+
+      - name: Fetch usage report(s)
+        env:
+          BILLING_TOKEN: ${{ secrets.billing_token }}
+          ENTERPRISE: ${{ inputs.enterprise }}
+          INCLUDE_PREVIOUS: ${{ inputs.include_previous_period }}
+          IN_MONTH: ${{ inputs.month }}
+        run: .github/scripts/fetch-report.sh
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          static_site_generator: next
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_COMMIT_SHA: ${{ github.sha }}
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
