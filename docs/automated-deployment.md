@@ -52,6 +52,12 @@ on:
         type: boolean
         default: true
 
+# Required to publish to GitHub Pages from the called workflow.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
     uses: BenDutton/copilot-billing-forecast/.github/workflows/auto-report-pages.yml@main
