@@ -71,7 +71,7 @@ jobs:
 
 ## Inputs
 
-The workflow always exports the `detailed` report type. By default it fetches
+The workflow always exports the `ai_credit` (AI usage) report type. By default it fetches
 the current calendar month (UTC); pass `month` as `MM-YY` (e.g. `06-26`) to
 target a specific month — the first and last day are derived automatically. See
 the [reusable workflow](../.github/workflows/auto-report-pages.yml) for the full

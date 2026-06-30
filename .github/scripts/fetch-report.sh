@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Fetch an enterprise "detailed" usage report from the GitHub billing REST API
-# and write it (and, optionally, the previous calendar month) into public/ so it
-# is preloaded into the built site.
+# Fetch an enterprise "ai_credit" (AI usage) report from the GitHub billing REST
+# API and write it (and, optionally, the previous calendar month) into public/ so
+# it is preloaded into the built site.
 #
 # Invoked by .github/workflows/auto-report-pages.yml. Required environment:
 #   BILLING_TOKEN    Enterprise admin / billing manager token.
@@ -21,9 +21,9 @@ INCLUDE_PREVIOUS="${INCLUDE_PREVIOUS:-false}"
 
 api="https://api.github.com/enterprises/${ENTERPRISE}/settings/billing/reports"
 
-# Report type is always 'detailed'; the API version is pinned here and updated
-# from this repository when needed.
-report_type="detailed"
+# Report type is always 'ai_credit' (the AI usage report); the API version is
+# pinned here and updated from this repository when needed.
+report_type="ai_credit"
 api_version="2026-03-10"
 poll_interval_seconds=15
 poll_timeout_minutes=20
