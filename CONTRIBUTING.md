@@ -53,6 +53,10 @@ uploaded, replaced, or cleared. If the file is absent the fetch 404s and the app
 falls back to the normal upload flow. This keeps the client-only constraint
 intact: the CSV is served as a static asset and parsed entirely in the browser.
 
+Optionally drop a second CSV at `public/preloaded-report-previous.csv` to also
+preload the previous-month comparison report. It is fetched and locked only when
+the primary preloaded report is present.
+
 ## Development guidelines
 
 - Keep the **client-only data** constraint inviolable.

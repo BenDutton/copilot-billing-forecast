@@ -8,9 +8,15 @@ import { parseUsageCsvText, type ParsedReport } from "@/lib/report";
  * `public/preloaded-report.csv` and it is fetched on load, parsed, and locked
  * so users cannot upload, replace, or clear it. Absent the file, the app
  * behaves normally. The base path keeps the URL correct under GitHub Pages.
+ *
+ * A second optional CSV at `public/preloaded-report-previous.csv` is loaded as
+ * the previous-month comparison report when (and only when) the primary
+ * preloaded report is present; it is locked the same way.
  */
 const PRELOADED_REPORT_FILE = "preloaded-report.csv";
 const PRELOADED_REPORT_URL = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/${PRELOADED_REPORT_FILE}`;
+const PRELOADED_COMPARISON_FILE = "preloaded-report-previous.csv";
+const PRELOADED_COMPARISON_URL = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/${PRELOADED_COMPARISON_FILE}`;
 
 interface ReportContextValue {
   report: ParsedReport | null;
@@ -61,6 +67,19 @@ export function ReportProvider({ children }: { children: React.ReactNode }) {
         const parsed = parseUsageCsvText(text, PRELOADED_REPORT_FILE);
         setReport(parsed);
         setLocked(true);
+
+        // Only probe for the optional previous-month report once the primary
+        // preloaded report is in place; a comparison without a primary report
+        // has nothing to compare against.
+        try {
+          const cmp = await fetch(PRELOADED_COMPARISON_URL, { signal: controller.signal });
+          if (cmp.ok && !(cmp.headers.get("content-type") ?? "").includes("text/html")) {
+            const cmpText = await cmp.text();
+            setComparisonReport(parseUsageCsvText(cmpText, PRELOADED_COMPARISON_FILE));
+          }
+        } catch {
+          // No preloaded comparison, or it could not be parsed: leave it unset.
+        }
       } catch {
         // No preloaded report, or it could not be parsed: normal upload mode.
       } finally {

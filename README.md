@@ -84,6 +84,16 @@ immediately, with uploading/replacing/clearing disabled. Everything still runs
 in the browser - the CSV is served as a static asset and parsed client-side.
 Remove the file for the normal upload experience.
 
+To also preload a previous month for month-over-month comparison, drop a second
+CSV at `public/preloaded-report-previous.csv`. It is loaded (and locked) only
+when the primary preloaded report is present:
+
+```bash
+cp ./this-month.csv public/preloaded-report.csv
+cp ./last-month.csv public/preloaded-report-previous.csv
+npm run build
+```
+
 > Note: a file in `public/` is publicly downloadable, so only preload reports
 > you are comfortable sharing with anyone who can reach the site.
 

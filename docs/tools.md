@@ -30,7 +30,9 @@ decrease in green; plain counts stay neutral. Covered cards include:
 
 Like the main report, the comparison CSV is parsed and held **in memory in your
 browser only**; it is never persisted or sent anywhere. Clearing or replacing the main
-report also clears the comparison.
+report also clears the comparison. A previous-month report can also be preloaded with
+the build (see the README's "Preloading a report" section), in which case it is locked
+alongside the main report.
 
 - [Usage Forecast](#usage-forecast) — _Forecasting_
 - [Team Insights](#team-insights) — _Breakdowns_
