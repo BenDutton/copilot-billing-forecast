@@ -16,9 +16,35 @@ to GitHub Pages with the report already loaded and locked.
 ## Prerequisites
 
 - A `BILLING_TOKEN` secret belonging to an enterprise admin or billing manager
-  with access to the billing usage reports API.
-- An `ENTERPRISE` repository variable set to your enterprise slug.
+  with access to the billing usage reports API (see
+  [Creating the `BILLING_TOKEN`](#creating-the-billing_token) below).
+- An `ENTERPRISE` repository variable set to your enterprise slug (the value in
+  `github.com/enterprises/<slug>`, not an organization name).
 - GitHub Pages enabled for the repository (Settings → Pages → "GitHub Actions").
+
+## Creating the `BILLING_TOKEN`
+
+The usage reports API requires a token whose owner is an **enterprise admin or
+billing manager**. A **classic personal access token (PAT)** is the most
+reliable choice, because it does not depend on the enterprise opting in to
+fine-grained PATs:
+
+1. Go to **Settings → Developer settings → Personal access tokens → Tokens
+   (classic) → Generate new token (classic)**
+   ([github.com/settings/tokens/new](https://github.com/settings/tokens/new)).
+2. Set a name and an expiration.
+3. Select the **`manage_billing:enterprise`** scope.
+4. Click **Generate token** and copy the value immediately.
+5. If your enterprise enforces SAML SSO, authorize the token for the
+   enterprise/organization after creating it.
+
+> A fine-grained PAT with the **Enterprise administration** permission can also
+> work, but only when an enterprise owner has enabled fine-grained PATs with the
+> enterprise as the resource owner. If the enterprise does not appear as a
+> resource owner when you create the token, use the classic PAT above instead.
+
+Finally, add the token as a secret in the caller repository: **Settings →
+Secrets and variables → Actions → New repository secret**, named `BILLING_TOKEN`.
 
 ## Calling the reusable workflow
 
