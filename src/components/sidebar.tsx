@@ -194,16 +194,7 @@ export function Sidebar({
           ·
         </span>
         {COMMIT_SHA ? (
-          <a
-            href={`https://github.com/BenDutton/copilot-billing-forecast/commit/${COMMIT_SHA}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() =>
-              posthog.capture("github_link_clicked", { link_location: "sidebar-build" })
-            }
-          >
-            build {COMMIT_SHA}
-          </a>
+            <span>build {COMMIT_SHA}</span>
         ) : (
           <span>development</span>
         )}
