@@ -102,11 +102,15 @@ export function Sidebar({
                 const active = tool.id === activeId;
                 const needsReport = toolRequiresReport(tool);
                 const lockedForReport = needsReport && !hasReport;
-                const disabled = lockedForReport || !tool.enabled;
+                // Tools locked only because no report is uploaded stay
+                // selectable: choosing one shows the upload prompt (the same
+                // landing state as first opening the app). Only tools that are
+                // not ready yet (disabled in the registry) are non-interactive.
+                const disabled = !tool.enabled;
                 return (
                   <li
                     key={tool.id}
-                    className={disabled ? styles.toolItemLocked : undefined}
+                    className={lockedForReport || disabled ? styles.toolItemLocked : undefined}
                     data-tip={lockedForReport ? "Upload a usage report to use this tool" : undefined}
                   >
                     <button

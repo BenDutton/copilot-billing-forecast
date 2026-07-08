@@ -1084,6 +1084,12 @@
   cursor: not-allowed;
 }
 
+/* Locked-for-report tools stay clickable (selecting one shows the upload
+   prompt) but keep the dimmed "disabled" look they had before. */
+.toolItemLocked .toolItem {
+  opacity: 0.55;
+}
+
 .toolItemLocked::after {
   content: attr(data-tip);
   position: absolute;
