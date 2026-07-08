@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import posthog from "posthog-js";
 import { Flash, Header, Heading, IconButton, Label, Spinner, Text, Timeline } from "@primer/react";
 import {
@@ -19,8 +19,41 @@ import { ReportProvider, useReport } from "@/components/report-provider";
 import { DEFAULT_TOOL_ID, getTool, getToolColor, toolRequiresReport } from "@/lib/tools";
 import styles from "./app.module.css";
 
-function Shell() {
+/**
+ * Keep the active tool in sync with the URL hash (e.g. `#usage-forecast`) so a
+ * tool can be deep-linked and shared. Hash routing is used because the app is a
+ * static export served under a base path, so there is no server to resolve
+ * per-tool paths. The hash is read only on the client (in an effect) to avoid a
+ * hydration mismatch with the server-prerendered default tool.
+ */
+function useToolHashRouting(): [string, (id: string) => void] {
   const [activeId, setActiveId] = useState(DEFAULT_TOOL_ID);
+
+  useEffect(() => {
+    const applyHash = () => {
+      const id = window.location.hash.replace(/^#/, "");
+      setActiveId(id && getTool(id) ? id : DEFAULT_TOOL_ID);
+    };
+    applyHash();
+    window.addEventListener("hashchange", applyHash);
+    return () => window.removeEventListener("hashchange", applyHash);
+  }, []);
+
+  const selectTool = useCallback((id: string) => {
+    setActiveId(id);
+    // Updating the hash makes the tool shareable and adds a history entry so
+    // browser back/forward navigates between tools. The hashchange listener
+    // above will re-sync state (a no-op when the id already matches).
+    if (getTool(id) && window.location.hash.replace(/^#/, "") !== id) {
+      window.location.hash = id;
+    }
+  }, []);
+
+  return [activeId, selectTool];
+}
+
+function Shell() {
+  const [activeId, selectTool] = useToolHashRouting();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { report, loading } = useReport();
   const tool = getTool(activeId);
@@ -45,7 +78,7 @@ function Shell() {
   }, [report, activeId, tool]);
 
   const handleSelect = (id: string) => {
-    setActiveId(id);
+    selectTool(id);
     setSidebarOpen(false);
     // Privacy: only the stable tool id (a fixed enum) is captured - never any
     // report contents or per-user data. Disabled tools never emit events; a
