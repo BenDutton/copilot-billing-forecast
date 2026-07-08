@@ -16,7 +16,7 @@ import {
 import { Sidebar } from "@/components/sidebar";
 import { CsvUploader } from "@/components/csv-uploader";
 import { ReportProvider, useReport } from "@/components/report-provider";
-import { DEFAULT_TOOL_ID, getTool, getToolColor } from "@/lib/tools";
+import { DEFAULT_TOOL_ID, getTool, getToolColor, toolRequiresReport } from "@/lib/tools";
 import styles from "./app.module.css";
 
 function Shell() {
@@ -26,6 +26,10 @@ function Shell() {
   const tool = getTool(activeId);
   const ActiveView = tool?.component;
   const toolColor = getToolColor(activeId);
+  // Guidance/documentation tools opt out of requiring an uploaded report, so
+  // they render immediately instead of showing the upload prompt.
+  const needsReport = tool ? toolRequiresReport(tool) : true;
+  const canShowView = !!report || !needsReport;
 
   // When a report first loads, the active tool's view appears without a click,
   // so emit a tool_viewed for it once on that transition.
@@ -44,9 +48,10 @@ function Shell() {
     setActiveId(id);
     setSidebarOpen(false);
     // Privacy: only the stable tool id (a fixed enum) is captured - never any
-    // report contents or per-user data. Disabled tools and the pre-upload
-    // state (no report loaded) never emit events.
-    if (report && getTool(id)?.enabled) {
+    // report contents or per-user data. Disabled tools never emit events; a
+    // tool that needs a report only emits once a report is loaded.
+    const next = getTool(id);
+    if (next?.enabled && (report || !toolRequiresReport(next))) {
       posthog.capture("tool_viewed", { tool_id: id });
     }
   };
@@ -87,7 +92,7 @@ function Shell() {
 
       <div className={styles.appBody}>
         <aside className={`${styles.pane} ${sidebarOpen ? styles.paneOpen : ""}`}>
-          <Sidebar activeId={activeId} onSelect={handleSelect} toolsDisabled={!report} />
+          <Sidebar activeId={activeId} onSelect={handleSelect} hasReport={!!report} />
         </aside>
         {sidebarOpen && (
           <div
@@ -98,7 +103,7 @@ function Shell() {
         )}
 
         <main className={styles.main}>
-          {report && (
+          {(report || (tool && !needsReport)) && (
             <div
               className={styles.contentBand}
               style={{ ["--group-color" as string]: toolColor }}
@@ -124,10 +129,12 @@ function Shell() {
                   {tool?.description}
                 </Text>
               </div>
-              <div className={styles.bandUploaders}>
-                <CsvUploader compact />
-                <CsvUploader compact slot="comparison" />
-              </div>
+              {report && (
+                <div className={styles.bandUploaders}>
+                  <CsvUploader compact />
+                  <CsvUploader compact slot="comparison" />
+                </div>
+              )}
             </div>
           )}
 
@@ -136,7 +143,7 @@ function Shell() {
               <div className={styles.promptShell}>
                 <Spinner size="large" aria-label="Loading report" />
               </div>
-            ) : !report ? (
+            ) : !canShowView ? (
               <GlobalUploadPrompt />
             ) : ActiveView ? (
               <div key={activeId} className={styles.toolView}>

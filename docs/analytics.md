@@ -19,7 +19,7 @@ Only the aggregate, non-sensitive metadata listed below is captured.
 | Event | When | Properties |
 | --- | --- | --- |
 | `csv_uploaded` | A usage report CSV is successfully parsed and loaded | `report_type` (`summarized` \| `detailed` \| `ai` \| `unknown`), `row_count` (number of rows in the report), `slot` (`primary` \| `comparison` — whether the file is the main report or the previous-month comparison report) |
-| `tool_viewed` | A tool is opened from the sidebar (or via the logo reset), or the active tool first appears when a report is loaded | `tool_id` (`usage-forecast` \| `team-insights` \| `model-breakdown` \| `spike-detection` \| `cost-center-rollup`) |
+| `tool_viewed` | A tool is opened from the sidebar (or via the logo reset), or the active tool first appears when a report is loaded | `tool_id` (`usage-forecast` \| `team-insights` \| `model-breakdown` \| `spike-detection` \| `cost-center-rollup` \| `budget-guidance`) |
 | `resource_clicked` | A curated Resources link in the sidebar is opened | `resource_label` (the link's title), `resource_category` (`News` \| `Courses & guides` \| `Videos`) |
 | `github_link_clicked` | An outbound link to the project's GitHub repository is opened | `link_location` (`sidebar-source` \| `sidebar-build` \| `footer-source` \| `footer-issue`) |
 

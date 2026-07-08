@@ -42,6 +42,9 @@ tools below without your data ever leaving your device.
 - **Model Breakdown** - AI Credit usage and trends broken down by model.
 - **Spike Detection** - Flag days with anomalous usage above the trend.
 - **Cost Center Rollup** - Roll up AI Credit usage and budgets by cost center.
+- **Budget Setup Guide** - Opinionated, read-only guidance for setting up Copilot
+  budgets, with a visual request-evaluation flow and common use-case recipes. Available
+  without uploading a report.
 
 You can also add a **previous month's** CSV to compare against. The comparable summary
 stat cards in each tool then gain a "vs last month" line showing the percentage change

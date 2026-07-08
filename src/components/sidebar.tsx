@@ -10,7 +10,7 @@ import {
   RocketIcon,
   MarkGithubIcon,
 } from "@primer/octicons-react";
-import { getToolsByCategory, CATEGORY_COLOR as TOOL_CATEGORY_COLOR, type ToolCategory } from "@/lib/tools";
+import { getToolsByCategory, toolRequiresReport, CATEGORY_COLOR as TOOL_CATEGORY_COLOR, type ToolCategory } from "@/lib/tools";
 import styles from "./app.module.css";
 
 /** Short commit SHA of the deployed build, baked in at build time. */
@@ -80,11 +80,11 @@ const RESOURCES: {
 export function Sidebar({
   activeId,
   onSelect,
-  toolsDisabled = false,
+  hasReport = false,
 }: {
   activeId: string;
   onSelect: (id: string) => void;
-  toolsDisabled?: boolean;
+  hasReport?: boolean;
 }) {
   const groups = getToolsByCategory();
   return (
@@ -100,12 +100,14 @@ export function Sidebar({
             <ul className={styles.toolList}>
               {tools.map((tool) => {
                 const active = tool.id === activeId;
-                const disabled = toolsDisabled || !tool.enabled;
+                const needsReport = toolRequiresReport(tool);
+                const lockedForReport = needsReport && !hasReport;
+                const disabled = lockedForReport || !tool.enabled;
                 return (
                   <li
                     key={tool.id}
                     className={disabled ? styles.toolItemLocked : undefined}
-                    data-tip={toolsDisabled ? "Upload a usage report to use this tool" : undefined}
+                    data-tip={lockedForReport ? "Upload a usage report to use this tool" : undefined}
                   >
                     <button
                       type="button"

@@ -63,4 +63,6 @@ the primary preloaded report is present.
 - Add UI elements with **Primer React** (`@primer/react`) components; prefer them over
   hand-rolled markup. Use `@primer/octicons-react` for icons.
 - Register new tools in the sidebar config and add a corresponding view.
+- Documentation/guidance tools that don't need an uploaded report can set
+  `requiresReport: false` in the tool config so they stay usable before upload.
 - Keep parsing tolerant of all three report variants and legacy columns.

@@ -1,8 +1,9 @@
 # Tools
 
-Copilot Billing Forecast groups its tools into three categories. Upload a GitHub
+Copilot Billing Forecast groups its tools into categories. Upload a GitHub
 usage report CSV once, then switch between the tools below without your data ever
-leaving your browser.
+leaving your browser. The **Budget Setup Guide** is reference material and works even
+before a report is loaded.
 
 All figures are estimates. AI Credit (AIC) costs use **1 AIC = $0.01 USD**, and
 monthly projections run to the end of the calendar month containing the report's
@@ -39,6 +40,7 @@ alongside the main report.
 - [Model Breakdown](#model-breakdown) — _Breakdowns_
 - [Cost Center Rollup](#cost-center-rollup) — _Breakdowns_
 - [Spike Detection](#spike-detection) — _Monitoring_
+- [Budget Setup Guide](#budget-setup-guide) — _Guidance_
 
 ## Usage Forecast
 
@@ -172,3 +174,34 @@ Flag days with anomalous usage above the trend.
 
 - The expected range is derived from the usage trend and its variability; days above
   the band are flagged as spikes.
+
+## Budget Setup Guide
+
+Opinionated, read-only guidance for setting up GitHub Copilot budgets. Unlike the other
+tools, it needs no uploaded report — it is reference material you can open at any time.
+
+**What it shows**
+
+- A "start here" priority: always set a **universal user-level budget** and an
+  **enterprise budget** (with "Stop usage when budget limit is reached" enabled) first.
+- A [React Flow](https://reactflow.dev) diagram of **how every Copilot request is
+  evaluated** — user-level budget, then the shared AI-credit pool, then metered
+  cost center / organization / enterprise budgets.
+- **Common use-case recipes**, including preventing overages and the noisy-neighbour
+  problem, and isolating each cost center's usage (with overages).
+- A reference for the cost centers REST API `ai_credit_pool_enabled` field, which caps
+  how much of the shared pool a cost center can draw before the metered phase begins.
+
+**How to read it**
+
+- Start with the two "do this first" controls, then pick the use case that matches your
+  enterprise structure.
+- Follow the linked GitHub docs for authoritative, up-to-date detail.
+
+**Key assumptions**
+
+- Figures are illustrative. This is not an official GitHub product; always confirm
+  behaviour in your enterprise settings and against your GitHub billing statements. The
+  guidance follows GitHub's
+  [Budgets for usage-based billing](https://docs.github.com/en/enterprise-cloud@latest/copilot/concepts/billing/budgets-for-usage-based-billing)
+  documentation.

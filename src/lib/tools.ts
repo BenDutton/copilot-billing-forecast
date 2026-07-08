@@ -6,12 +6,14 @@ import {
   PulseIcon,
   StackIcon,
   OrganizationIcon,
+  LightBulbIcon,
 } from "@primer/octicons-react";
 import { UsageForecast } from "@/components/tools/usage-forecast";
 import { TeamInsights } from "@/components/tools/team-insights";
 import { ModelBreakdown } from "@/components/tools/model-breakdown";
 import { SpikeDetection } from "@/components/tools/spike-detection";
 import { CostCenterRollup } from "@/components/tools/cost-center-rollup";
+import { BudgetGuidance } from "@/components/tools/budget-guidance";
 
 export interface Tool {
   /** Stable id used for routing/selection. */
@@ -27,15 +29,22 @@ export interface Tool {
   component: ComponentType;
   /** Whether the tool is ready to use. */
   enabled: boolean;
+  /**
+   * Whether the tool needs an uploaded report to work. Defaults to `true`.
+   * Documentation/guidance tools set this to `false` so they stay usable
+   * before any report is loaded.
+   */
+  requiresReport?: boolean;
 }
 
 /** Sidebar categories, in display order. */
-export type ToolCategory = "Forecasting" | "Breakdowns" | "Monitoring";
+export type ToolCategory = "Forecasting" | "Breakdowns" | "Monitoring" | "Guidance";
 
 export const TOOL_CATEGORIES: ToolCategory[] = [
   "Forecasting",
   "Breakdowns",
   "Monitoring",
+  "Guidance",
 ];
 
 /** Accent color per category, shared by the sidebar and the main content header. */
@@ -43,6 +52,7 @@ export const CATEGORY_COLOR: Record<ToolCategory, string> = {
   Forecasting: "#0969da",
   Breakdowns: "#8250df",
   Monitoring: "#bc4c00",
+  Guidance: "#1a7f37",
 };
 
 /**
@@ -95,7 +105,22 @@ export const TOOLS: Tool[] = [
     component: CostCenterRollup,
     enabled: true,
   },
+  {
+    id: "budget-guidance",
+    label: "Budget Setup Guide",
+    description: "Opinionated guidance for setting up Copilot budgets.",
+    icon: LightBulbIcon,
+    category: "Guidance",
+    component: BudgetGuidance,
+    enabled: true,
+    requiresReport: false,
+  },
 ];
+
+/** Whether a tool needs an uploaded report before it can be used. */
+export function toolRequiresReport(tool: Tool): boolean {
+  return tool.requiresReport !== false;
+}
 
 export const DEFAULT_TOOL_ID = TOOLS[0].id;
 
