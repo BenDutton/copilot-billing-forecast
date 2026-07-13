@@ -192,13 +192,12 @@ interface UseCase {
 }
 
 /** Budget-control types, each with a glyph so steps are scannable at a glance. */
-type BudgetGlyph = "ulb" | "costCenter" | "enterprise" | "org" | "included" | "stop";
+type BudgetGlyph = "ulb" | "costCenter" | "enterprise" | "included" | "stop";
 
 const GLYPH: Record<BudgetGlyph, { icon: Icon; label: string }> = {
   ulb: { icon: PersonIcon, label: "User-level budget" },
   costCenter: { icon: OrganizationIcon, label: "Cost center" },
   enterprise: { icon: GlobeIcon, label: "Enterprise budget" },
-  org: { icon: PeopleIcon, label: "Organization budget" },
   included: { icon: ShieldCheckIcon, label: "Included-usage control" },
   stop: { icon: StopIcon, label: "Stop usage" },
 };
@@ -252,16 +251,19 @@ const USE_CASES: UseCase[] = [
   },
   {
     icon: PersonIcon,
-    title: "Delegate control to organization owners",
-    controls: ["Organization budgets", "Enterprise budget"],
+    title: "Delegate oversight to organization owners",
+    controls: ["Cost center", "Organization assignment", "Included-usage control", "Cost center ULB", "Cost center budget", "Enterprise budget"],
     situation:
-      "Let organization owners set their own guardrails without involving an enterprise admin.",
+      "Give each organization its own spending guardrail and keep its owners informed, while enterprise billing roles retain control.",
     steps: [
-      { glyph: "org", text: "Each organization owner sets an organization budget." },
-      { glyph: "enterprise", text: "The enterprise admin sets an enterprise budget as a safety net." },
-      { glyph: "stop", text: "Enable “Stop usage when budget limit is reached” on every budget." },
+      { glyph: "costCenter", text: "An enterprise owner or billing manager creates a cost center for the organization and assigns the organization as a resource." },
+      { glyph: "ulb", text: "Optionally set the universal user-level budget to $0 and give this cost center a nonzero user-level budget. The cost center override lets its users consume credits while users outside a cost center remain blocked." },
+      { glyph: "included", text: "For full isolation from the shared pool, replace the organization resource with direct users or an enterprise team, then enable the included-usage control. Organization resources are not supported when this control is enabled." },
+      { glyph: "costCenter", text: "Set an AI-credit cost center budget and add the organization owners as threshold-alert recipients." },
+      { glyph: "stop", text: "Enable “Stop usage when budget limit is reached” on the cost center budget." },
+      { glyph: "enterprise", text: "Keep an enterprise budget as a safety net for usage not attributed to a cost center." },
     ],
-    note: "Unpredictable if users hold licenses in multiple orgs — prefer cost centers with direct assignment.",
+    note: "Organization owners can monitor alerts but cannot manage the cost center budget. If users receive Copilot licenses from multiple organizations, assign them directly to a cost center for predictable attribution.",
   },
 ];
 
