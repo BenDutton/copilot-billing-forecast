@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
 const QUERY = "(prefers-reduced-motion: reduce)";
 
@@ -11,13 +11,15 @@ const QUERY = "(prefers-reduced-motion: reduce)";
  * mismatches.
  */
 export function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(
-    (onStoreChange) => {
-      const mql = window.matchMedia(QUERY);
-      mql.addEventListener("change", onStoreChange);
-      return () => mql.removeEventListener("change", onStoreChange);
-    },
-    () => window.matchMedia(QUERY).matches,
-    () => false,
-  );
+  const [reduced, setReduced] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia(QUERY);
+    setReduced(mql.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  return reduced;
 }
