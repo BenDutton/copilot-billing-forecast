@@ -44,10 +44,10 @@
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^10",
+    "eslint": "^9.39.5",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
-    "typescript": "^7"
+    "typescript": "^5.9.3"
   },
   "overrides": {
     "@emnapi/core": "1.11.0",
