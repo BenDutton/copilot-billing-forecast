@@ -1353,8 +1353,8 @@
   }
 }
 
-/* Shared section header used by Common use cases, Isolating, and References so
-   the major blocks read consistently and have room to breathe. */
+/* Shared section header used by Common use cases and References so the major
+   blocks read consistently and have room to breathe. */
 .sectionHeading {
   font-size: 18px;
   line-height: 1.25;
@@ -1724,38 +1724,6 @@
   font-weight: 500;
   color: var(--fgColor-muted);
   background: var(--bgColor-muted);
-}
-
-/* ai_credit_pool_enabled reference table. */
-.poolTableWrap {
-  overflow-x: auto;
-}
-
-.poolTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-.poolTable th,
-.poolTable td {
-  text-align: left;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--borderColor-muted, #d8dee4);
-  vertical-align: top;
-  line-height: 1.5;
-}
-
-.poolTable th {
-  color: var(--fgColor-muted);
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.poolTable td:first-child {
-  white-space: nowrap;
 }
 
 /* Sources list. */

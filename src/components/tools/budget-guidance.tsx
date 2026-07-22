@@ -198,7 +198,7 @@ const GLYPH: Record<BudgetGlyph, { icon: Icon; label: string }> = {
   ulb: { icon: PersonIcon, label: "User-level budget" },
   costCenter: { icon: OrganizationIcon, label: "Cost center" },
   enterprise: { icon: GlobeIcon, label: "Enterprise budget" },
-  included: { icon: ShieldCheckIcon, label: "Included-usage control" },
+  included: { icon: ShieldCheckIcon, label: "AI credit pool" },
   stop: { icon: StopIcon, label: "Stop usage" },
 };
 
@@ -222,18 +222,18 @@ const USE_CASES: UseCase[] = [
   {
     icon: OrganizationIcon,
     title: "Isolate each cost center (including overages)",
-    controls: ["Cost centers", "Included-usage control", "Cost center budget", "Enterprise failsafe"],
+    controls: ["Cost centers", "AI credit pool", "Cost center budget", "Enterprise failsafe"],
     situation:
       "Give each team its own self-contained budget so heavy use by one team never eats another team's share of the pool — and each team owns its overages.",
     steps: [
-      { glyph: "costCenter", text: "Create a cost center per team and assign users (or enterprise teams) directly, not just organizations." },
-              { glyph: "included", text: "Turn on the included-usage control (set ai_credit_pool_enabled = true via the cost centers REST API) so the team can only draw the pool its own licenses fund." },
-      { glyph: "included", text: "At that cap, choose to block the team or let usage continue as paid overage." },
-      { glyph: "costCenter", text: "Set a cost center budget to cap the team's metered charges, and enable “Stop usage”." },
+      { glyph: "costCenter", text: "Create a cost center per team and assign users or enterprise teams directly." },
+      { glyph: "included", text: "When creating or editing the cost center in the billing UI, turn on “AI credit pool.” GitHub calculates the limit from its assigned Copilot licenses, so you do not enter an amount." },
+      { glyph: "included", text: "Choose whether to block further included usage at the limit or continue as paid overage, if your enterprise allows overages." },
+      { glyph: "costCenter", text: "Separately set a cost center budget with “Stop usage” enabled to cap metered charges after the pool is exhausted." },
       { glyph: "costCenter", text: "Optionally enable cost center exclusion so the team spends independently of the enterprise budget." },
       { glyph: "enterprise", text: "Keep an enterprise budget as a failsafe for anyone not in a cost center." },
     ],
-    note: "See the ai_credit_pool_enabled reference below.",
+    note: "AI credit pools support directly assigned users and enterprise teams, not organization resources.",
   },
   {
     icon: LawIcon,
@@ -252,13 +252,13 @@ const USE_CASES: UseCase[] = [
   {
     icon: PersonIcon,
     title: "Delegate oversight to organization owners",
-    controls: ["Cost center", "Organization assignment", "Included-usage control", "Cost center ULB", "Cost center budget", "Enterprise budget"],
+    controls: ["Cost center", "Organization assignment", "AI credit pool", "Cost center ULB", "Cost center budget", "Enterprise budget"],
     situation:
       "Give each organization its own spending guardrail and keep its owners informed, while enterprise billing roles retain control.",
     steps: [
       { glyph: "costCenter", text: "An enterprise owner or billing manager creates a cost center for the organization and assigns the organization as a resource." },
       { glyph: "ulb", text: "Optionally set the universal user-level budget to $0 and give this cost center a nonzero user-level budget. The cost center override lets its users consume credits while users outside a cost center remain blocked." },
-      { glyph: "included", text: "For full isolation from the shared pool, replace the organization resource with direct users or an enterprise team, then enable the included-usage control. Organization resources are not supported when this control is enabled." },
+      { glyph: "included", text: "For full isolation from the shared pool, replace the organization resource with direct users or an enterprise team, then turn on “AI credit pool” when editing the cost center. Organization resources are not supported while it is enabled." },
       { glyph: "costCenter", text: "Set an AI-credit cost center budget and add the organization owners as threshold-alert recipients." },
       { glyph: "stop", text: "Enable “Stop usage when budget limit is reached” on the cost center budget." },
       { glyph: "enterprise", text: "Keep an enterprise budget as a safety net for usage not attributed to a cost center." },
@@ -394,61 +394,6 @@ function GuidanceMain() {
         </div>
       </section>
 
-      {/* Isolating a cost center: section header + card */}
-      <section>
-        <Heading as="h2" className={styles.sectionHeading}>
-          Isolating a cost center&apos;s usage
-        </Heading>
-        <Text as="p" className={styles.sectionLead}>
-          An <strong>included-usage control</strong> caps how much of the shared pool a
-          cost center can draw before the metered phase begins — the key to true team
-          isolation. It is set per cost center with the{" "}
-          <code>ai_credit_pool_enabled</code> field, which is currently only available
-          through the cost centers REST API — there is no UI for it yet.
-        </Text>
-        <div className={styles.card}>
-        <div className={styles.poolTableWrap}>
-          <table className={styles.poolTable}>
-            <thead>
-              <tr>
-                <th>Setting</th>
-                <th>Effect</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <code>false</code> <span className={styles.muted}>(default)</span>
-                </td>
-                <td>No cap — the cost center draws freely from the shared enterprise pool.</td>
-              </tr>
-              <tr>
-                <td>
-                  <code>true</code>
-                </td>
-                <td>
-                  Capped at the credits its own licenses fund. At the cap, block members or
-                  let usage continue as paid overage.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <Text as="p" className={styles.muted} style={{ fontSize: 13, marginTop: 12 }}>
-          Set it with the{" "}
-          <Link
-            href="https://docs.github.com/en/enterprise-cloud@latest/rest/billing/cost-centers?apiVersion=2026-03-10"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            cost centers REST API <LinkExternalIcon size={12} />
-          </Link>
-          {" "}— it isn&apos;t in the cost center settings UI yet. Pair it with a cost center
-          budget to cap metered charges.
-        </Text>
-      </div>
-      </section>
-
       {/* Sources */}
       <section>
         <Heading as="h2" className={styles.sectionHeading}>
@@ -490,14 +435,27 @@ function GuidanceMain() {
           </li>
           <li>
             <Link
-              href="https://docs.github.com/en/enterprise-cloud@latest/rest/billing/cost-centers?apiVersion=2026-03-10"
+              href="https://docs.github.com/en/enterprise-cloud@latest/billing/tutorials/control-costs-at-scale"
               target="_blank"
               rel="noopener noreferrer"
             >
-              Cost centers REST API <LinkExternalIcon size={12} />
+              Controlling and tracking costs at scale <LinkExternalIcon size={12} />
             </Link>
             <span className={styles.muted}>
-              {" "}— the <code>ai_credit_pool_enabled</code> field and endpoints.
+              {" "}— creating cost centers and budgets in the billing UI.
+            </span>
+          </li>
+          <li>
+            <Link
+              href="https://github.blog/changelog/2026-07-20-ai-credit-pools-for-cost-centers-in-the-billing-ui/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              AI credit pools for cost centers in the billing UI{" "}
+              <LinkExternalIcon size={12} />
+            </Link>
+            <span className={styles.muted}>
+              {" "}— enabling and configuring a cost center&apos;s included-credit limit.
             </span>
           </li>
         </ul>
