@@ -189,8 +189,9 @@ tools, it needs no uploaded report — it is reference material you can open at 
   cost center / organization / enterprise budgets.
 - **Common use-case recipes**, including preventing overages and the noisy-neighbour
   problem, and isolating each cost center's usage (with overages).
-- A reference for the cost centers REST API `ai_credit_pool_enabled` field, which caps
-  how much of the shared pool a cost center can draw before the metered phase begins.
+- UI-first steps for enabling an **AI credit pool** while creating or editing a cost
+  center, choosing what happens at its automatically calculated limit, and separately
+  capping metered charges with a cost center budget.
 
 **How to read it**
 
