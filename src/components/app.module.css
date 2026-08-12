@@ -452,6 +452,12 @@
   min-height: 108px;
 }
 
+/* Total tokens stat card: give the 2x2 breakdown grid a bit more breathing
+   room than the single-line stat cards next to it. */
+.tokenStatCard {
+  grid-column: span 2;
+}
+
 /* Users stat card: count on the left, a mini spend histogram on the right. */
 .usersCard {
   display: flex;
@@ -595,6 +601,77 @@
 
 .infoButton {
   color: var(--fgColor-muted);
+}
+
+/* Unstyled button used as a Tooltip trigger for non-interactive inline text
+   (e.g. token counts) - Primer's Tooltip requires an interactive child. */
+.tokenTrigger {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: default;
+}
+
+/* Compact color-coded input/output/cached token annotation, e.g. next to a
+   model's token total in the breakdown table. Icons carry the meaning so the
+   labels stay out of the way of the numbers. */
+.tokenParts {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  vertical-align: middle;
+}
+
+.tokenPart {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tokenPart svg {
+  flex-shrink: 0;
+}
+
+/* Small grid of labeled token-type totals shown under the "Total tokens"
+   stat card. Each type gets its own row so nothing wraps or truncates. */
+.tokenGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 10px;
+  margin-top: 6px;
+}
+
+.tokenGridItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tokenGridItem svg {
+  flex-shrink: 0;
+}
+
+.tokenGridLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fgColor-muted);
+  font-size: 11px;
+}
+
+.tokenGridValue {
+  margin-left: auto;
+  padding-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fgColor-default);
 }
 
 .tableScroll {
@@ -826,6 +903,22 @@
   text-align: right;
   color: var(--fgColor-muted);
   font-variant-numeric: tabular-nums;
+}
+
+/* Token breakdown shown on its own line under an auto-selected model, right
+   aligned under the AIC/share value so it doesn't compete for space inline. */
+.modelBarTokenRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2px;
+}
+
+.modelBarTokenBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--fgColor-muted);
 }
 
 /* Budget utilisation cell */

@@ -132,10 +132,19 @@ AI Credit usage and trends broken down by model.
 
 - A stacked area chart of daily AI Credit usage per model over time.
 - A per-model table with totals and trends, expandable for detail.
+- When the uploaded AI usage report includes the per-model token columns (`input`,
+  `output`, `cache_read`, `cache_write` - added to GitHub's AI usage report in August
+  2026), a **Total tokens** stat card shows a rounded input/output/cache read/cache
+  write breakdown grid, and the table gets a **Tokens** column with a compact
+  color-coded input/output/cached count next to each model's total (hover for the
+  exact figures). Reports without these columns (or usage from before June 1, 2026)
+  simply omit this detail.
 
 **How to read it**
 
 - Identify which models drive the most spend and whether their usage is rising.
+- Use the token breakdown to see what's driving a model's AI Credit cost - e.g. heavy
+  cache write usage vs. output-heavy usage.
 
 ## Cost Center Rollup
 

@@ -23,6 +23,11 @@ export interface UsageRow {
   workflowPath?: string;
   costCenterName?: string;
   model?: string;
+  /** Per-model token counts, only present in AI usage reports from Aug 2026 on. */
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
 }
 
 export type NumericMetric = "netAmount" | "grossAmount" | "quantity";
@@ -43,6 +48,8 @@ export interface ParsedReport {
   columns: string[];
   fileName: string;
   rowCount: number;
+  /** Whether the CSV includes the per-model token columns (input/output/cache read/cache write). */
+  hasTokenBreakdown: boolean;
 }
 
 /** Map of canonical field name -> accepted CSV header aliases (lower-cased). */
@@ -62,6 +69,10 @@ const FIELD_ALIASES: Record<keyof UsageRow, string[]> = {
   workflowPath: ["workflow_path", "workflow_name", "workflow"],
   costCenterName: ["cost_center_name", "cost_center", "costcenter"],
   model: ["model"],
+  inputTokens: ["input", "input_tokens"],
+  outputTokens: ["output", "output_tokens"],
+  cacheReadTokens: ["cache_read", "cache_read_tokens"],
+  cacheWriteTokens: ["cache_write", "cache_write_tokens"],
 };
 
 function normalizeHeader(header: string): string {
@@ -133,6 +144,13 @@ function buildParsedReport(
     return key ? row[key] : undefined;
   };
 
+  const hasTokenBreakdown = !!(
+    map.inputTokens ||
+    map.outputTokens ||
+    map.cacheReadTokens ||
+    map.cacheWriteTokens
+  );
+
   const rows: UsageRow[] = [];
   for (const row of results.data) {
     const date = toStr(get(row, "date"));
@@ -153,6 +171,10 @@ function buildParsedReport(
       workflowPath: toStr(get(row, "workflowPath")) || undefined,
       costCenterName: toStr(get(row, "costCenterName")) || undefined,
       model: toStr(get(row, "model")) || undefined,
+      inputTokens: map.inputTokens ? toNumber(get(row, "inputTokens")) : undefined,
+      outputTokens: map.outputTokens ? toNumber(get(row, "outputTokens")) : undefined,
+      cacheReadTokens: map.cacheReadTokens ? toNumber(get(row, "cacheReadTokens")) : undefined,
+      cacheWriteTokens: map.cacheWriteTokens ? toNumber(get(row, "cacheWriteTokens")) : undefined,
     });
   }
 
@@ -166,6 +188,7 @@ function buildParsedReport(
     columns: headers,
     fileName,
     rowCount: rows.length,
+    hasTokenBreakdown,
   };
 }
 
@@ -324,6 +347,15 @@ export interface ModelSummary {
   daily: DailyPoint[];
   firstDay: string;
   lastDay: string;
+  /**
+   * Summed token counts for this model, only present when the source report
+   * includes the per-model token breakdown columns (AI usage reports from
+   * Aug 2026 on). Undefined when the report predates that column set.
+   */
+  totalInputTokens?: number;
+  totalOutputTokens?: number;
+  totalCacheReadTokens?: number;
+  totalCacheWriteTokens?: number;
 }
 
 /**
@@ -335,6 +367,11 @@ export function aggregateByModel(rows: UsageRow[]): ModelSummary[] {
     total: number;
     days: Map<string, number>;
     users: Set<string>;
+    inputTokens: number;
+    outputTokens: number;
+    cacheReadTokens: number;
+    cacheWriteTokens: number;
+    hasTokens: boolean;
   }
   const byModel = new Map<string, Acc>();
   let grandTotal = 0;
@@ -348,12 +385,33 @@ export function aggregateByModel(rows: UsageRow[]): ModelSummary[] {
 
     let acc = byModel.get(row.model);
     if (!acc) {
-      acc = { total: 0, days: new Map(), users: new Set() };
+      acc = {
+        total: 0,
+        days: new Map(),
+        users: new Set(),
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheReadTokens: 0,
+        cacheWriteTokens: 0,
+        hasTokens: false,
+      };
       byModel.set(row.model, acc);
     }
     acc.total += qty;
     acc.days.set(day, (acc.days.get(day) ?? 0) + qty);
     if (row.username) acc.users.add(row.username);
+    if (
+      row.inputTokens !== undefined ||
+      row.outputTokens !== undefined ||
+      row.cacheReadTokens !== undefined ||
+      row.cacheWriteTokens !== undefined
+    ) {
+      acc.hasTokens = true;
+      acc.inputTokens += row.inputTokens ?? 0;
+      acc.outputTokens += row.outputTokens ?? 0;
+      acc.cacheReadTokens += row.cacheReadTokens ?? 0;
+      acc.cacheWriteTokens += row.cacheWriteTokens ?? 0;
+    }
   }
 
   const models: ModelSummary[] = [];
@@ -371,6 +429,10 @@ export function aggregateByModel(rows: UsageRow[]): ModelSummary[] {
       daily,
       firstDay: daily.length ? daily[0].date : "",
       lastDay: daily.length ? daily[daily.length - 1].date : "",
+      totalInputTokens: acc.hasTokens ? acc.inputTokens : undefined,
+      totalOutputTokens: acc.hasTokens ? acc.outputTokens : undefined,
+      totalCacheReadTokens: acc.hasTokens ? acc.cacheReadTokens : undefined,
+      totalCacheWriteTokens: acc.hasTokens ? acc.cacheWriteTokens : undefined,
     });
   }
 

@@ -22,6 +22,9 @@ import {
   InfoIcon,
   ArrowUpRightIcon,
   ArrowDownRightIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  CacheIcon,
   DashIcon,
   SearchIcon,
   ChevronDownIcon,
@@ -56,6 +59,13 @@ const TREND_META = {
   flat: { label: "Flat", variant: "secondary", Icon: DashIcon },
 } as const;
 
+/** Color coding for token types, reused across the stat card and table breakdowns. */
+const TOKEN_COLORS = {
+  input: "#0969da",
+  output: "#8250df",
+  cache: "#1a7f37",
+} as const;
+
 interface ModelRow extends ModelSummary {
   trend: "rising" | "falling" | "flat";
 }
@@ -76,6 +86,11 @@ interface DisplayRow {
   trend: "rising" | "falling" | "flat";
   /** Present only on the aggregated Auto group row. */
   children?: ModelRow[];
+  /** Summed token counts, present only when the report includes token columns. */
+  totalInputTokens?: number;
+  totalOutputTokens?: number;
+  totalCacheReadTokens?: number;
+  totalCacheWriteTokens?: number;
 }
 
 type SortKey = "model" | "totalQuantity" | "share" | "users";
@@ -204,6 +219,10 @@ export function ModelBreakdown() {
         share: m.share,
         users: m.users,
         trend: m.trend,
+        totalInputTokens: m.totalInputTokens,
+        totalOutputTokens: m.totalOutputTokens,
+        totalCacheReadTokens: m.totalCacheReadTokens,
+        totalCacheWriteTokens: m.totalCacheWriteTokens,
       }));
 
     if (autoModels.length > 0) {
@@ -234,6 +253,10 @@ export function ModelBreakdown() {
         users: autoUsers.size,
         trend,
         children: [...autoModels].sort((a, b) => b.totalQuantity - a.totalQuantity),
+        totalInputTokens: sumOptional(autoModels.map((m) => m.totalInputTokens)),
+        totalOutputTokens: sumOptional(autoModels.map((m) => m.totalOutputTokens)),
+        totalCacheReadTokens: sumOptional(autoModels.map((m) => m.totalCacheReadTokens)),
+        totalCacheWriteTokens: sumOptional(autoModels.map((m) => m.totalCacheWriteTokens)),
       });
     }
     return rows;
@@ -306,6 +329,16 @@ export function ModelBreakdown() {
     .filter((x) => x.slope > 0)
     .sort((a, b) => b.slope - a.slope)[0]?.m;
   const maxModel = topModel?.totalQuantity ?? 0;
+  const hasTokens = report.hasTokenBreakdown;
+  const totalTokens = models.reduce(
+    (a, m) =>
+      a +
+      (m.totalInputTokens ?? 0) +
+      (m.totalOutputTokens ?? 0) +
+      (m.totalCacheReadTokens ?? 0) +
+      (m.totalCacheWriteTokens ?? 0),
+    0,
+  );
 
   const colorFor = (key: string) => {
     if (key === "Other") return PALETTE[PALETTE.length - 1];
@@ -368,6 +401,22 @@ export function ModelBreakdown() {
           value={rising?.model ?? "No upward trend"}
           sub={rising ? `${formatAic(rising.totalQuantity)} total` : undefined}
         />
+        {hasTokens && (
+          <StatCard
+            title="Total tokens"
+            info="Total input, output, cache read, and cache write tokens behind the AI Credits in this report. Only available for usage from Aug 2026 onward."
+            value={formatTokens(totalTokens)}
+            className={styles.tokenStatCard}
+            sub={
+              <TokenBreakdownGrid
+                input={models.reduce((a, m) => a + (m.totalInputTokens ?? 0), 0)}
+                output={models.reduce((a, m) => a + (m.totalOutputTokens ?? 0), 0)}
+                cacheRead={models.reduce((a, m) => a + (m.totalCacheReadTokens ?? 0), 0)}
+                cacheWrite={models.reduce((a, m) => a + (m.totalCacheWriteTokens ?? 0), 0)}
+              />
+            }
+          />
+        )}
       </div>
 
       {/* Stacked area chart */}
@@ -514,6 +563,7 @@ export function ModelBreakdown() {
                   numeric
                 />
                 <th>Trend</th>
+                {hasTokens && <th className={styles.numCol}>Tokens</th>}
                 {previous && <th className={styles.numCol}>vs last month</th>}
               </tr>
             </thead>
@@ -569,6 +619,31 @@ export function ModelBreakdown() {
                           <span style={{ marginLeft: 4 }}>{trend.label}</span>
                         </Label>
                       </td>
+                      {hasTokens && (
+                        <td className={styles.numCol}>
+                          {m.totalInputTokens !== undefined ? (
+                            <PrimerTooltip text={tokenBreakdownText(m)} direction="nw">
+                              <button type="button" className={styles.tokenTrigger}>
+                                {formatTokens(
+                                  (m.totalInputTokens ?? 0) +
+                                    (m.totalOutputTokens ?? 0) +
+                                    (m.totalCacheReadTokens ?? 0) +
+                                    (m.totalCacheWriteTokens ?? 0),
+                                )}
+                                <span className={styles.costInline}>
+                                  <TokenParts
+                                    input={m.totalInputTokens ?? 0}
+                                    output={m.totalOutputTokens ?? 0}
+                                    cached={(m.totalCacheReadTokens ?? 0) + (m.totalCacheWriteTokens ?? 0)}
+                                  />
+                                </span>
+                              </button>
+                            </PrimerTooltip>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                      )}
                       {previous && (
                         <td className={styles.numCol}>
                           <ComparisonDelta
@@ -628,20 +703,43 @@ function AutoModelDetail({
         {models.map((m) => {
           const share = groupTotal > 0 ? (m.totalQuantity / groupTotal) * 100 : 0;
           const width = maxModel > 0 ? (m.totalQuantity / maxModel) * 100 : 0;
+          const hasModelTokens = m.totalInputTokens !== undefined;
           return (
-            <div key={m.model} className={styles.modelBarRow}>
-              <span className={styles.modelBarName} title={m.model}>
-                {m.model}
-              </span>
-              <span className={styles.modelBarTrack}>
-                <span className={styles.modelBarFill} style={{ width: `${width}%` }} />
-              </span>
-              <span className={styles.modelBarVal}>
-                {formatAic(m.totalQuantity)}
-                <span className={styles.costInline}>{formatUsd(m.totalQuantity * USD_PER_AIC)}</span>
-                {" · "}
-                {share.toFixed(0)}%
-              </span>
+            <div key={m.model}>
+              <div className={styles.modelBarRow}>
+                <span className={styles.modelBarName} title={m.model}>
+                  {m.model}
+                </span>
+                <span className={styles.modelBarTrack}>
+                  <span className={styles.modelBarFill} style={{ width: `${width}%` }} />
+                </span>
+                <span className={styles.modelBarVal}>
+                  {formatAic(m.totalQuantity)}
+                  <span className={styles.costInline}>{formatUsd(m.totalQuantity * USD_PER_AIC)}</span>
+                  {" · "}
+                  {share.toFixed(0)}%
+                </span>
+              </div>
+              {hasModelTokens && (
+                <div className={styles.modelBarTokenRow}>
+                  <PrimerTooltip text={tokenBreakdownText(m)} direction="nw">
+                    <button type="button" className={`${styles.tokenTrigger} ${styles.modelBarTokenBtn}`}>
+                      {formatTokens(
+                        (m.totalInputTokens ?? 0) +
+                          (m.totalOutputTokens ?? 0) +
+                          (m.totalCacheReadTokens ?? 0) +
+                          (m.totalCacheWriteTokens ?? 0),
+                      )}{" "}
+                      tokens
+                      <TokenParts
+                        input={m.totalInputTokens ?? 0}
+                        output={m.totalOutputTokens ?? 0}
+                        cached={(m.totalCacheReadTokens ?? 0) + (m.totalCacheWriteTokens ?? 0)}
+                      />
+                    </button>
+                  </PrimerTooltip>
+                </div>
+              )}
             </div>
           );
         })}
@@ -717,16 +815,18 @@ function StatCard({
   sub,
   valueColor,
   extra,
+  className,
 }: {
   title: string;
   info?: string;
   value: string;
-  sub?: string;
+  sub?: React.ReactNode;
   valueColor?: string;
   extra?: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className={styles.card}>
+    <div className={`${styles.card}${className ? ` ${className}` : ""}`}>
       <div className={styles.cardLabel}>
         {info ? (
           <span className={styles.labelWithInfo}>
@@ -804,4 +904,107 @@ function compactAic(value: number): string {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value);
+}
+
+/** Sum an array of optional numbers, returning undefined only if every value is undefined. */
+function sumOptional(values: (number | undefined)[]): number | undefined {
+  if (values.every((v) => v === undefined)) return undefined;
+  return values.reduce<number>((a, v) => a + (v ?? 0), 0);
+}
+
+/** Compact token count, e.g. "1.2M". */
+function formatTokens(value: number): string {
+  return new Intl.NumberFormat(undefined, {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+/** Full breakdown text for the Tokens column tooltip. */
+function tokenBreakdownText(row: {
+  totalInputTokens?: number;
+  totalOutputTokens?: number;
+  totalCacheReadTokens?: number;
+  totalCacheWriteTokens?: number;
+}): string {
+  const input = row.totalInputTokens ?? 0;
+  const output = row.totalOutputTokens ?? 0;
+  const cacheRead = row.totalCacheReadTokens ?? 0;
+  const cacheWrite = row.totalCacheWriteTokens ?? 0;
+  const nf = new Intl.NumberFormat();
+  return [
+    `Input: ${nf.format(input)}`,
+    `Output: ${nf.format(output)}`,
+    `Cache read: ${nf.format(cacheRead)}`,
+    `Cache write: ${nf.format(cacheWrite)}`,
+  ].join(" · ");
+}
+
+/**
+ * Compact, color-coded inline breakdown of input/output/cached token counts,
+ * e.g. "↓1.8M ↑900K ⚡400K". Used to annotate a token total without taking up
+ * much horizontal space - full precision is available via the enclosing
+ * tooltip.
+ */
+function TokenParts({
+  input,
+  output,
+  cached,
+}: {
+  input: number;
+  output: number;
+  cached: number;
+}) {
+  return (
+    <span className={styles.tokenParts}>
+      <span className={styles.tokenPart} style={{ color: TOKEN_COLORS.input }}>
+        <ArrowDownIcon size={10} fill={TOKEN_COLORS.input} />
+        {formatTokens(input)}
+      </span>
+      <span className={styles.tokenPart} style={{ color: TOKEN_COLORS.output }}>
+        <ArrowUpIcon size={10} fill={TOKEN_COLORS.output} />
+        {formatTokens(output)}
+      </span>
+      <span className={styles.tokenPart} style={{ color: TOKEN_COLORS.cache }}>
+        <CacheIcon size={10} fill={TOKEN_COLORS.cache} />
+        {formatTokens(cached)}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * Full input/output/cache-read/cache-write breakdown shown as a small
+ * color-coded grid under the "Total tokens" stat card. Rounded to compact
+ * numbers (e.g. "1.2M") so it stays readable in the narrow card - exact
+ * figures are available in the underlying report.
+ */
+function TokenBreakdownGrid({
+  input,
+  output,
+  cacheRead,
+  cacheWrite,
+}: {
+  input: number;
+  output: number;
+  cacheRead: number;
+  cacheWrite: number;
+}) {
+  const items = [
+    { label: "Input", Icon: ArrowDownIcon, value: input, color: TOKEN_COLORS.input },
+    { label: "Output", Icon: ArrowUpIcon, value: output, color: TOKEN_COLORS.output },
+    { label: "Cache read", Icon: CacheIcon, value: cacheRead, color: TOKEN_COLORS.cache },
+    { label: "Cache write", Icon: CacheIcon, value: cacheWrite, color: TOKEN_COLORS.cache },
+  ];
+  return (
+    <div className={styles.tokenGrid}>
+      {items.map((it) => (
+        <span key={it.label} className={styles.tokenGridItem}>
+          <it.Icon size={12} fill={it.color} />
+          <span className={styles.tokenGridLabel}>{it.label}</span>
+          <span className={styles.tokenGridValue}>{formatTokens(it.value)}</span>
+        </span>
+      ))}
+    </div>
+  );
 }
