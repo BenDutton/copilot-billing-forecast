@@ -27,6 +27,8 @@ decrease in green; plain counts stay neutral. Covered cards include:
   column showing each model's increase or decrease.
 - **Cost Center Rollup** — cost centers, total, and active users. The breakdown table
   gains a **vs last month** column showing each cost center's increase or decrease.
+- **Repository Breakdown** — repositories, total, and active users. The breakdown
+  table gains a **vs last month** column showing each repository's increase or decrease.
 - **Spike Detection** — the baseline run rate.
 
 Like the main report, the comparison CSV is parsed and held **in memory in your
@@ -39,6 +41,7 @@ alongside the main report.
 - [Team Insights](#team-insights) — _Breakdowns_
 - [Model Breakdown](#model-breakdown) — _Breakdowns_
 - [Cost Center Rollup](#cost-center-rollup) — _Breakdowns_
+- [Repository Breakdown](#repository-breakdown) — _Breakdowns_
 - [Spike Detection](#spike-detection) — _Monitoring_
 - [Budget Setup Guide](#budget-setup-guide) — _Guidance_
 
@@ -164,6 +167,30 @@ Roll up AI Credit usage and budgets by cost center.
 
 - Rows without a cost center are grouped under `(no cost center)`; share is each
   center's portion of total AI Credits in the report.
+
+## Repository Breakdown
+
+Roll up AI Credit usage and trends by repository.
+
+**What it shows**
+
+- A stacked area chart of daily AI Credit usage per repository.
+- A per-repository table with each repository's share of spend, user and model
+  counts, run rate, and projected month-end total.
+
+**How to read it**
+
+- Compare repositories by their share of total spend and month-end trajectory,
+  and see which repositories have the most active users or model variety.
+
+**Key assumptions**
+
+- Rows without a repository are grouped under `(no repository)`; share is each
+  repository's portion of total AI Credits in the report.
+- Repository attribution is only present in detailed and AI usage reports for
+  products with a per-repository dimension (e.g. Copilot code completions,
+  Actions); summarized reports have no `repository` column, so this tool shows
+  a "no repository data" message for them.
 
 ## Spike Detection
 

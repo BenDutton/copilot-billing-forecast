@@ -7,12 +7,14 @@ import {
   StackIcon,
   OrganizationIcon,
   LightBulbIcon,
+  RepoIcon,
 } from "@primer/octicons-react";
 import { UsageForecast } from "@/components/tools/usage-forecast";
 import { TeamInsights } from "@/components/tools/team-insights";
 import { ModelBreakdown } from "@/components/tools/model-breakdown";
 import { SpikeDetection } from "@/components/tools/spike-detection";
 import { CostCenterRollup } from "@/components/tools/cost-center-rollup";
+import { RepositoryBreakdown } from "@/components/tools/repository-breakdown";
 import { BudgetGuidance } from "@/components/tools/budget-guidance";
 
 export interface Tool {
@@ -103,6 +105,15 @@ export const TOOLS: Tool[] = [
     icon: OrganizationIcon,
     category: "Breakdowns",
     component: CostCenterRollup,
+    enabled: true,
+  },
+  {
+    id: "repository-breakdown",
+    label: "Repository Breakdown",
+    description: "AI Credit usage and trends broken down by repository.",
+    icon: RepoIcon,
+    category: "Breakdowns",
+    component: RepositoryBreakdown,
     enabled: true,
   },
   {
