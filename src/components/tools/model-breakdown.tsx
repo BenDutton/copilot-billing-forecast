@@ -613,14 +613,14 @@ export function ModelBreakdown() {
                         <td className={styles.numCol}>
                           {m.totalInputTokens !== undefined ? (
                             <PrimerTooltip text={tokenBreakdownText(m)} direction="nw">
-                              <span>
+                              <button type="button" className={styles.tokenTrigger}>
                                 {formatTokens(
                                   (m.totalInputTokens ?? 0) +
                                     (m.totalOutputTokens ?? 0) +
                                     (m.totalCacheReadTokens ?? 0) +
                                     (m.totalCacheWriteTokens ?? 0),
                                 )}
-                              </span>
+                              </button>
                             </PrimerTooltip>
                           ) : (
                             "-"
@@ -701,7 +701,10 @@ function AutoModelDetail({
                 {share.toFixed(0)}%
                 {m.totalInputTokens !== undefined && (
                   <PrimerTooltip text={tokenBreakdownText(m)} direction="nw">
-                    <span className={styles.costInline}>
+                    <button
+                      type="button"
+                      className={`${styles.costInline} ${styles.tokenTrigger}`}
+                    >
                       {" · "}
                       {formatTokens(
                         (m.totalInputTokens ?? 0) +
@@ -710,7 +713,7 @@ function AutoModelDetail({
                           (m.totalCacheWriteTokens ?? 0),
                       )}{" "}
                       tokens
-                    </span>
+                    </button>
                   </PrimerTooltip>
                 )}
               </span>

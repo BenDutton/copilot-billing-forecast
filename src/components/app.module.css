@@ -597,6 +597,18 @@
   color: var(--fgColor-muted);
 }
 
+/* Unstyled button used as a Tooltip trigger for non-interactive inline text
+   (e.g. token counts) - Primer's Tooltip requires an interactive child. */
+.tokenTrigger {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: default;
+}
+
 .tableScroll {
   overflow-x: auto;
 }
