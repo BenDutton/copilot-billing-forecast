@@ -515,6 +515,82 @@ export function aggregateByCostCenter(rows: UsageRow[]): CostCenterSummary[] {
   return centers.sort((a, b) => b.totalQuantity - a.totalQuantity);
 }
 
+/** Aggregated AI-credit usage for a single repository. */
+export interface RepositorySummary {
+  /** Repository name, or "(no repository)" for unattributed rows. */
+  name: string;
+  /** Total AI Credits (quantity) attributed to this repository. */
+  totalQuantity: number;
+  /** Fraction of the grand total, 0..1. */
+  share: number;
+  /** Number of distinct users in this repository. */
+  users: number;
+  /** Number of distinct models used in this repository. */
+  models: number;
+  /** Number of distinct active days. */
+  activeDays: number;
+  /** Daily quantity series, sorted ascending - used for trends/forecasts. */
+  daily: DailyPoint[];
+  firstDay: string;
+  lastDay: string;
+}
+
+/**
+ * Group rows by repository and summarize AI-credit usage, distinct users and
+ * models, and a daily series. Rows without a repository are bucketed under
+ * "(no repository)". Returned sorted by total quantity descending.
+ */
+export function aggregateByRepository(rows: UsageRow[]): RepositorySummary[] {
+  interface Acc {
+    total: number;
+    days: Map<string, number>;
+    users: Set<string>;
+    models: Set<string>;
+  }
+  const byRepo = new Map<string, Acc>();
+  let grandTotal = 0;
+
+  for (const row of rows) {
+    const day = normalizeDay(row.date);
+    if (!day) continue;
+    const name = row.repository || "(no repository)";
+    const qty = row.quantity || 0;
+    grandTotal += qty;
+
+    let acc = byRepo.get(name);
+    if (!acc) {
+      acc = { total: 0, days: new Map(), users: new Set(), models: new Set() };
+      byRepo.set(name, acc);
+    }
+    acc.total += qty;
+    acc.days.set(day, (acc.days.get(day) ?? 0) + qty);
+    if (row.username) acc.users.add(row.username);
+    if (row.model) acc.models.add(row.model);
+  }
+
+  const repos: RepositorySummary[] = [];
+  for (const [name, acc] of byRepo.entries()) {
+    const daily: DailyPoint[] = [...acc.days.entries()]
+      .map(([date, value]) => ({ date, t: Date.parse(`${date}T00:00:00Z`), value }))
+      .filter((p) => Number.isFinite(p.t))
+      .sort((a, b) => a.t - b.t);
+
+    repos.push({
+      name,
+      totalQuantity: acc.total,
+      share: grandTotal > 0 ? acc.total / grandTotal : 0,
+      users: acc.users.size,
+      models: acc.models.size,
+      activeDays: acc.days.size,
+      daily,
+      firstDay: daily.length ? daily[0].date : "",
+      lastDay: daily.length ? daily[daily.length - 1].date : "",
+    });
+  }
+
+  return repos.sort((a, b) => b.totalQuantity - a.totalQuantity);
+}
+
 /**
  * Build a per-day breakdown of quantity grouped by username and by model.
  * Useful for attributing a spike day to its top contributors.
