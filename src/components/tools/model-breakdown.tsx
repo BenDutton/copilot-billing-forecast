@@ -76,6 +76,11 @@ interface DisplayRow {
   trend: "rising" | "falling" | "flat";
   /** Present only on the aggregated Auto group row. */
   children?: ModelRow[];
+  /** Summed token counts, present only when the report includes token columns. */
+  totalInputTokens?: number;
+  totalOutputTokens?: number;
+  totalCacheReadTokens?: number;
+  totalCacheWriteTokens?: number;
 }
 
 type SortKey = "model" | "totalQuantity" | "share" | "users";
@@ -204,6 +209,10 @@ export function ModelBreakdown() {
         share: m.share,
         users: m.users,
         trend: m.trend,
+        totalInputTokens: m.totalInputTokens,
+        totalOutputTokens: m.totalOutputTokens,
+        totalCacheReadTokens: m.totalCacheReadTokens,
+        totalCacheWriteTokens: m.totalCacheWriteTokens,
       }));
 
     if (autoModels.length > 0) {
@@ -234,6 +243,10 @@ export function ModelBreakdown() {
         users: autoUsers.size,
         trend,
         children: [...autoModels].sort((a, b) => b.totalQuantity - a.totalQuantity),
+        totalInputTokens: sumOptional(autoModels.map((m) => m.totalInputTokens)),
+        totalOutputTokens: sumOptional(autoModels.map((m) => m.totalOutputTokens)),
+        totalCacheReadTokens: sumOptional(autoModels.map((m) => m.totalCacheReadTokens)),
+        totalCacheWriteTokens: sumOptional(autoModels.map((m) => m.totalCacheWriteTokens)),
       });
     }
     return rows;
@@ -306,6 +319,16 @@ export function ModelBreakdown() {
     .filter((x) => x.slope > 0)
     .sort((a, b) => b.slope - a.slope)[0]?.m;
   const maxModel = topModel?.totalQuantity ?? 0;
+  const hasTokens = report.hasTokenBreakdown;
+  const totalTokens = models.reduce(
+    (a, m) =>
+      a +
+      (m.totalInputTokens ?? 0) +
+      (m.totalOutputTokens ?? 0) +
+      (m.totalCacheReadTokens ?? 0) +
+      (m.totalCacheWriteTokens ?? 0),
+    0,
+  );
 
   const colorFor = (key: string) => {
     if (key === "Other") return PALETTE[PALETTE.length - 1];
@@ -368,6 +391,22 @@ export function ModelBreakdown() {
           value={rising?.model ?? "No upward trend"}
           sub={rising ? `${formatAic(rising.totalQuantity)} total` : undefined}
         />
+        {hasTokens && (
+          <StatCard
+            title="Total tokens"
+            info="Total input, output, cache read, and cache write tokens behind the AI Credits in this report. Only available for usage from Aug 2026 onward."
+            value={formatTokens(totalTokens)}
+            sub={tokenBreakdownText({
+              totalInputTokens: models.reduce((a, m) => a + (m.totalInputTokens ?? 0), 0),
+              totalOutputTokens: models.reduce((a, m) => a + (m.totalOutputTokens ?? 0), 0),
+              totalCacheReadTokens: models.reduce((a, m) => a + (m.totalCacheReadTokens ?? 0), 0),
+              totalCacheWriteTokens: models.reduce(
+                (a, m) => a + (m.totalCacheWriteTokens ?? 0),
+                0,
+              ),
+            })}
+          />
+        )}
       </div>
 
       {/* Stacked area chart */}
@@ -514,6 +553,7 @@ export function ModelBreakdown() {
                   numeric
                 />
                 <th>Trend</th>
+                {hasTokens && <th className={styles.numCol}>Tokens</th>}
                 {previous && <th className={styles.numCol}>vs last month</th>}
               </tr>
             </thead>
@@ -569,6 +609,24 @@ export function ModelBreakdown() {
                           <span style={{ marginLeft: 4 }}>{trend.label}</span>
                         </Label>
                       </td>
+                      {hasTokens && (
+                        <td className={styles.numCol}>
+                          {m.totalInputTokens !== undefined ? (
+                            <PrimerTooltip text={tokenBreakdownText(m)} direction="nw">
+                              <span>
+                                {formatTokens(
+                                  (m.totalInputTokens ?? 0) +
+                                    (m.totalOutputTokens ?? 0) +
+                                    (m.totalCacheReadTokens ?? 0) +
+                                    (m.totalCacheWriteTokens ?? 0),
+                                )}
+                              </span>
+                            </PrimerTooltip>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                      )}
                       {previous && (
                         <td className={styles.numCol}>
                           <ComparisonDelta
@@ -641,6 +699,20 @@ function AutoModelDetail({
                 <span className={styles.costInline}>{formatUsd(m.totalQuantity * USD_PER_AIC)}</span>
                 {" · "}
                 {share.toFixed(0)}%
+                {m.totalInputTokens !== undefined && (
+                  <PrimerTooltip text={tokenBreakdownText(m)} direction="nw">
+                    <span className={styles.costInline}>
+                      {" · "}
+                      {formatTokens(
+                        (m.totalInputTokens ?? 0) +
+                          (m.totalOutputTokens ?? 0) +
+                          (m.totalCacheReadTokens ?? 0) +
+                          (m.totalCacheWriteTokens ?? 0),
+                      )}{" "}
+                      tokens
+                    </span>
+                  </PrimerTooltip>
+                )}
               </span>
             </div>
           );
@@ -804,4 +876,38 @@ function compactAic(value: number): string {
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(value);
+}
+
+/** Sum an array of optional numbers, returning undefined only if every value is undefined. */
+function sumOptional(values: (number | undefined)[]): number | undefined {
+  if (values.every((v) => v === undefined)) return undefined;
+  return values.reduce<number>((a, v) => a + (v ?? 0), 0);
+}
+
+/** Compact token count, e.g. "1.2M". */
+function formatTokens(value: number): string {
+  return new Intl.NumberFormat(undefined, {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+/** Full breakdown text for the Tokens column tooltip. */
+function tokenBreakdownText(row: {
+  totalInputTokens?: number;
+  totalOutputTokens?: number;
+  totalCacheReadTokens?: number;
+  totalCacheWriteTokens?: number;
+}): string {
+  const input = row.totalInputTokens ?? 0;
+  const output = row.totalOutputTokens ?? 0;
+  const cacheRead = row.totalCacheReadTokens ?? 0;
+  const cacheWrite = row.totalCacheWriteTokens ?? 0;
+  const nf = new Intl.NumberFormat();
+  return [
+    `Input: ${nf.format(input)}`,
+    `Output: ${nf.format(output)}`,
+    `Cache read: ${nf.format(cacheRead)}`,
+    `Cache write: ${nf.format(cacheWrite)}`,
+  ].join(" · ");
 }
