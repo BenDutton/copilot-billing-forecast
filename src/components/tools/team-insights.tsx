@@ -22,6 +22,9 @@ import {
   ArrowUpIcon,
   ArrowDownIcon,
   CacheIcon,
+  GraphIcon,
+  GoalIcon,
+  CheckCircleFillIcon,
 } from "@primer/octicons-react";
 import { useReport } from "@/components/report-provider";
 import { ComparisonDelta } from "@/components/comparison-delta";
@@ -856,10 +859,33 @@ function UserDetail({ user, budget }: { user: UserRow; budget: number }) {
   const projectedPct = budget > 0 ? (user.projectedMonth / budget) * 100 : 0;
   const bundledModels = bundleAutoModels(user.models);
   const maxModel = bundledModels[0]?.quantity ?? 0;
+  const overBudget = budget > 0 && projectedPct > 100;
   return (
     <div className={styles.detailPanel}>
-      <div className={styles.detailGrid}>
-        <div>
+      {budget > 0 && (
+        <div
+          className={`${styles.detailBanner} ${overBudget ? styles.detailBannerDanger : styles.detailBannerOk}`}
+        >
+          {overBudget ? (
+            <AlertIcon size={16} aria-label="Over budget" />
+          ) : (
+            <CheckCircleFillIcon size={16} aria-label="Within budget" />
+          )}
+          <span>
+            Projected to {overBudget ? "exceed" : "stay within"} budget at the current run rate:{" "}
+            <strong>{formatAic(user.projectedMonth)}</strong> of {formatAic(budget)} (
+            {projectedPct.toFixed(0)}%)
+            {overBudget && (
+              <>
+                {" "}
+                · <strong>{formatAic(user.projectedMonth - budget)}</strong> over
+              </>
+            )}
+          </span>
+        </div>
+      )}
+      <div className={`${styles.detailGrid} ${budget > 0 ? styles.detailGridWithBudget : ""}`}>
+        <div className={styles.detailSection}>
           <div className={styles.detailHeading}>
             <CalendarIcon size={14} />
             <span>Activity</span>
@@ -880,8 +906,9 @@ function UserDetail({ user, budget }: { user: UserRow; budget: number }) {
           </dl>
         </div>
 
-        <div>
+        <div className={styles.detailSection}>
           <div className={styles.detailHeading}>
+            <GraphIcon size={14} />
             <span>Models ({bundledModels.length})</span>
           </div>
           {bundledModels.length === 0 ? (
@@ -940,26 +967,25 @@ function UserDetail({ user, budget }: { user: UserRow; budget: number }) {
         </div>
 
         {budget > 0 && (
-          <div>
+          <div className={styles.detailSection}>
             <div className={styles.detailHeading}>
+              <GoalIcon size={14} />
               <span>Budget</span>
+            </div>
+            <div className={styles.budgetGauges}>
+              <div className={styles.budgetGaugeRow}>
+                <span className={styles.budgetGaugeLabel}>Used to date</span>
+                <UtilizationBar pct={observedPct} />
+              </div>
+              <div className={styles.budgetGaugeRow}>
+                <span className={styles.budgetGaugeLabel}>Projected</span>
+                <UtilizationBar pct={projectedPct} />
+              </div>
             </div>
             <dl className={styles.detailList}>
               <dt>Monthly budget</dt>
               <dd>
                 {formatAic(budget)} ({formatUsd(budget * USD_PER_AIC)})
-              </dd>
-              <dt>Used to date</dt>
-              <dd>{observedPct.toFixed(0)}%</dd>
-              <dt>Projected use</dt>
-              <dd
-                style={
-                  projectedPct > 100
-                    ? { color: "var(--fgColor-danger, #cf222e)", fontWeight: 600 }
-                    : undefined
-                }
-              >
-                {projectedPct.toFixed(0)}%
               </dd>
               <dt>{user.projectedMonth > budget ? "Projected overage" : "Headroom"}</dt>
               <dd>
