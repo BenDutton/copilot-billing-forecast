@@ -19,9 +19,6 @@ import {
   CalendarIcon,
   SearchIcon,
   AlertIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  CacheIcon,
   GraphIcon,
   GoalIcon,
   CheckCircleFillIcon,
@@ -31,6 +28,7 @@ import { ComparisonDelta } from "@/components/comparison-delta";
 import { ExportMenu } from "@/components/export-menu";
 import { usePersistentState } from "@/components/use-persistent-state";
 import { SortableTh, type SortDir } from "@/components/sortable-th";
+import { formatTokens, tokenBreakdownText, TokenParts } from "@/components/token-display";
 import { aggregateByUser, aggregateDaily, type UserUsage } from "@/lib/report";
 import { forecastDaily } from "@/lib/forecast";
 import styles from "../app.module.css";
@@ -38,13 +36,6 @@ import styles from "../app.module.css";
 /** 1 AI Credit (AIC) = $0.01 USD. */
 const USD_PER_AIC = 0.01;
 const PAGE_SIZE = 8;
-
-/** Color coding for token types, reused across the per-user model breakdown. */
-const TOKEN_COLORS = {
-  input: "#0969da",
-  output: "#8250df",
-  cache: "#1a7f37",
-} as const;
 
 /**
  * Days from the last observed day through the end of that calendar month.
@@ -938,7 +929,15 @@ function UserDetail({ user, budget }: { user: UserRow; budget: number }) {
                     </div>
                     {hasTokens && (
                       <div className={styles.modelBarTokenRow}>
-                        <PrimerTooltip text={tokenBreakdownText(m)} direction="nw">
+                        <PrimerTooltip
+                          text={tokenBreakdownText({
+                            input: m.inputTokens ?? 0,
+                            output: m.outputTokens ?? 0,
+                            cacheRead: m.cacheReadTokens ?? 0,
+                            cacheWrite: m.cacheWriteTokens ?? 0,
+                          })}
+                          direction="nw"
+                        >
                           <button
                             type="button"
                             className={`${styles.tokenTrigger} ${styles.modelBarTokenBtn}`}
@@ -1170,59 +1169,6 @@ function formatUsd(value: number): string {
     currency: "USD",
     maximumFractionDigits: 2,
   }).format(value);
-}
-
-/** Compact token count, e.g. "1.2M". */
-function formatTokens(value: number): string {
-  return new Intl.NumberFormat(undefined, {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(value);
-}
-
-/** Full breakdown text for a model's token tooltip. */
-function tokenBreakdownText(row: {
-  inputTokens?: number;
-  outputTokens?: number;
-  cacheReadTokens?: number;
-  cacheWriteTokens?: number;
-}): string {
-  const input = row.inputTokens ?? 0;
-  const output = row.outputTokens ?? 0;
-  const cacheRead = row.cacheReadTokens ?? 0;
-  const cacheWrite = row.cacheWriteTokens ?? 0;
-  const nf = new Intl.NumberFormat();
-  return [
-    `Input: ${nf.format(input)}`,
-    `Output: ${nf.format(output)}`,
-    `Cache read: ${nf.format(cacheRead)}`,
-    `Cache write: ${nf.format(cacheWrite)}`,
-  ].join(" · ");
-}
-
-/**
- * Compact, color-coded inline breakdown of input/output/cached token counts,
- * e.g. "↓1.8M ↑900K ⚡400K". Used to annotate a token total without taking up
- * much horizontal space - full precision is available via the enclosing
- * tooltip.
- */
-function TokenParts({ input, output, cached }: { input: number; output: number; cached: number }) {
-  return (
-    <span className={styles.tokenParts}>
-      <span className={styles.tokenPart} style={{ color: TOKEN_COLORS.input }}>
-        <ArrowDownIcon size={10} fill={TOKEN_COLORS.input} />
-        {formatTokens(input)}
-      </span>
-      <span className={styles.tokenPart} style={{ color: TOKEN_COLORS.output }}>
-        <ArrowUpIcon size={10} fill={TOKEN_COLORS.output} />
-        {formatTokens(output)}
-      </span>
-      <span className={styles.tokenPart} style={{ color: TOKEN_COLORS.cache }}>
-        <CacheIcon size={10} fill={TOKEN_COLORS.cache} />
-        {formatTokens(cached)}
-      </span>
-    </span>
-  );
 }
 
 function formatMonthEnd(isoDate: string): string {
