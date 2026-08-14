@@ -260,6 +260,16 @@ export interface ModelUsage {
   model: string;
   /** AI Credits (quantity) attributed to this model. */
   quantity: number;
+  /**
+   * Summed token counts for this user/model pair, only present when the
+   * source report includes the per-model token breakdown columns (AI usage
+   * reports from Aug 2026 on). Undefined when the report predates that
+   * column set.
+   */
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
 }
 
 /** Aggregated AI-credit usage for a single user. */
@@ -284,10 +294,18 @@ export interface UserUsage {
  * "(unattributed)". Returned sorted by total quantity descending.
  */
 export function aggregateByUser(rows: UsageRow[]): UserUsage[] {
+  interface ModelAcc {
+    quantity: number;
+    inputTokens: number;
+    outputTokens: number;
+    cacheReadTokens: number;
+    cacheWriteTokens: number;
+    hasTokens: boolean;
+  }
   interface Acc {
     total: number;
     days: Map<string, number>;
-    models: Map<string, number>;
+    models: Map<string, ModelAcc>;
   }
   const byUser = new Map<string, Acc>();
 
@@ -305,7 +323,31 @@ export function aggregateByUser(rows: UsageRow[]): UserUsage[] {
     acc.total += qty;
     acc.days.set(day, (acc.days.get(day) ?? 0) + qty);
     if (row.model) {
-      acc.models.set(row.model, (acc.models.get(row.model) ?? 0) + qty);
+      let modelAcc = acc.models.get(row.model);
+      if (!modelAcc) {
+        modelAcc = {
+          quantity: 0,
+          inputTokens: 0,
+          outputTokens: 0,
+          cacheReadTokens: 0,
+          cacheWriteTokens: 0,
+          hasTokens: false,
+        };
+        acc.models.set(row.model, modelAcc);
+      }
+      modelAcc.quantity += qty;
+      if (
+        row.inputTokens !== undefined ||
+        row.outputTokens !== undefined ||
+        row.cacheReadTokens !== undefined ||
+        row.cacheWriteTokens !== undefined
+      ) {
+        modelAcc.hasTokens = true;
+        modelAcc.inputTokens += row.inputTokens ?? 0;
+        modelAcc.outputTokens += row.outputTokens ?? 0;
+        modelAcc.cacheReadTokens += row.cacheReadTokens ?? 0;
+        modelAcc.cacheWriteTokens += row.cacheWriteTokens ?? 0;
+      }
     }
   }
 
@@ -317,7 +359,14 @@ export function aggregateByUser(rows: UsageRow[]): UserUsage[] {
       .sort((a, b) => a.t - b.t);
 
     const models: ModelUsage[] = [...acc.models.entries()]
-      .map(([model, quantity]) => ({ model, quantity }))
+      .map(([model, m]) => ({
+        model,
+        quantity: m.quantity,
+        inputTokens: m.hasTokens ? m.inputTokens : undefined,
+        outputTokens: m.hasTokens ? m.outputTokens : undefined,
+        cacheReadTokens: m.hasTokens ? m.cacheReadTokens : undefined,
+        cacheWriteTokens: m.hasTokens ? m.cacheWriteTokens : undefined,
+      }))
       .sort((a, b) => b.quantity - a.quantity);
 
     users.push({

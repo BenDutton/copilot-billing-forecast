@@ -114,6 +114,12 @@ Per-user metrics, models, and budget forecasts.
   optional budget.
 - **Usage cohorts** (power, heavy, typical, light, and near-zero users) with the
   average and median spend per user in each.
+- Expanding a user reveals a per-model breakdown of their AI Credits. When the
+  uploaded AI usage report includes the per-model token columns (`input`, `output`,
+  `cache_read`, `cache_write` - added to GitHub's AI usage report in August 2026),
+  each model also shows a compact color-coded input/output/cached token count
+  (hover for the exact figures). Reports without these columns simply omit this
+  detail.
 
 **How to read it**
 

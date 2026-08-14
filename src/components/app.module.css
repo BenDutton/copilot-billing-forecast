@@ -827,10 +827,70 @@
   padding: 16px 16px 16px 44px;
 }
 
+/* One-line headline summarising the user's budget status at a glance, so the
+   most actionable fact doesn't require scanning three separate columns. */
+.detailBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.detailBanner strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.detailBannerOk {
+  background-color: var(--bgColor-success-muted, #d1f7c4);
+  color: var(--fgColor-success, #1a7f37);
+}
+
+.detailBannerDanger {
+  background-color: var(--bgColor-danger-muted, #ffebe9);
+  color: var(--fgColor-danger, #cf222e);
+}
+
 .detailGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 24px;
+  grid-template-columns: minmax(200px, 1fr) minmax(280px, 1.7fr);
+  background-color: var(--bgColor-default);
+  border: 1px solid var(--borderColor-default);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.detailGridWithBudget {
+  grid-template-columns: minmax(200px, 0.9fr) minmax(280px, 1.5fr) minmax(200px, 0.9fr);
+}
+
+@media (max-width: 760px) {
+  .detailGrid,
+  .detailGridWithBudget {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Section within the unified detail panel (Activity/Models/Budget). A single
+   shared border/background with dividers between sections - rather than
+   separately-bordered cards - keeps every section the same height and avoids
+   the "floating boxes of mismatched heights" look. */
+.detailSection {
+  padding: 14px 16px;
+  min-width: 0;
+}
+
+.detailSection:not(:last-child) {
+  border-right: 1px solid var(--borderColor-default);
+}
+
+@media (max-width: 760px) {
+  .detailSection:not(:last-child) {
+    border-right: none;
+    border-bottom: 1px solid var(--borderColor-default);
+  }
 }
 
 .detailHeading {
@@ -842,7 +902,7 @@
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--fgColor-muted);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .detailList {
@@ -860,6 +920,7 @@
 .detailList dd {
   margin: 0;
   text-align: right;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
@@ -867,14 +928,33 @@
 .modelBars {
   display: flex;
   flex-direction: column;
-  gap: 6px;
 }
 
+.modelBars > div {
+  padding: 6px 0;
+}
+
+.modelBars > div:not(:last-child) {
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.modelBars > div:first-child {
+  padding-top: 0;
+}
+
+.modelBars > div:last-child {
+  padding-bottom: 0;
+}
+
+/* Fixed-width name/value columns so the track column lines up at the same
+   x-position on every row - a shared 1fr column can't do that on its own
+   because each row is its own grid and the auto-sized name/value text
+   differs per model. */
 .modelBarRow {
   display: grid;
-  grid-template-columns: minmax(80px, 1.2fr) 2fr 200px;
+  grid-template-columns: 96px 1fr 108px;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-size: 12px;
 }
 
@@ -949,6 +1029,28 @@
   font-variant-numeric: tabular-nums;
   min-width: 34px;
   text-align: right;
+}
+
+/* Labeled gauge rows in the per-user Budget card - reuses the same
+   track/fill visual as the table's Budget Used column so "at a glance"
+   reading is consistent between the row and its expanded detail. */
+.budgetGauges {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.budgetGaugeRow {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.budgetGaugeLabel {
+  font-size: 12px;
+  color: var(--fgColor-muted);
 }
 
 .modelTags {
