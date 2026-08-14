@@ -19,6 +19,9 @@ import {
   CalendarIcon,
   SearchIcon,
   AlertIcon,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  CacheIcon,
 } from "@primer/octicons-react";
 import { useReport } from "@/components/report-provider";
 import { ComparisonDelta } from "@/components/comparison-delta";
@@ -32,6 +35,13 @@ import styles from "../app.module.css";
 /** 1 AI Credit (AIC) = $0.01 USD. */
 const USD_PER_AIC = 0.01;
 const PAGE_SIZE = 8;
+
+/** Color coding for token types, reused across the per-user model breakdown. */
+const TOKEN_COLORS = {
+  input: "#0969da",
+  output: "#8250df",
+  cache: "#1a7f37",
+} as const;
 
 /**
  * Days from the last observed day through the end of that calendar month.
@@ -773,6 +783,20 @@ interface BundledModel {
   quantity: number;
   /** Constituent auto-selected models - present only on the aggregated Auto entry. */
   children?: UserUsage["models"];
+  /**
+   * Summed token counts, only present when the source report includes the
+   * per-model token breakdown columns.
+   */
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+}
+
+/** Sum an array of optional numbers, returning undefined only if every value is undefined. */
+function sumOptional(values: (number | undefined)[]): number | undefined {
+  if (values.every((v) => v === undefined)) return undefined;
+  return values.reduce<number>((a, v) => a + (v ?? 0), 0);
 }
 
 /**
@@ -790,6 +814,10 @@ function bundleAutoModels(models: UserUsage["models"]): BundledModel[] {
       model: "Auto",
       quantity,
       children: [...auto].sort((a, b) => b.quantity - a.quantity),
+      inputTokens: sumOptional(auto.map((m) => m.inputTokens)),
+      outputTokens: sumOptional(auto.map((m) => m.outputTokens)),
+      cacheReadTokens: sumOptional(auto.map((m) => m.cacheReadTokens)),
+      cacheWriteTokens: sumOptional(auto.map((m) => m.cacheWriteTokens)),
     },
   ];
   return bundled.sort((a, b) => b.quantity - a.quantity);
@@ -867,17 +895,43 @@ function UserDetail({ user, budget }: { user: UserRow; budget: number }) {
                 const width = maxModel > 0 ? (m.quantity / maxModel) * 100 : 0;
                 const label = m.children ? `${m.model} (${m.children.length})` : m.model;
                 const title = m.children ? autoChildrenTitle(m.children) : m.model;
+                const hasTokens = m.inputTokens !== undefined;
                 return (
-                  <div key={m.model} className={styles.modelBarRow}>
-                    <span className={styles.modelBarName} title={title}>
-                      {label}
-                    </span>
-                    <span className={styles.modelBarTrack}>
-                      <span className={styles.modelBarFill} style={{ width: `${width}%` }} />
-                    </span>
-                    <span className={styles.modelBarVal}>
-                      {formatAic(m.quantity)} · {share.toFixed(0)}%
-                    </span>
+                  <div key={m.model}>
+                    <div className={styles.modelBarRow}>
+                      <span className={styles.modelBarName} title={title}>
+                        {label}
+                      </span>
+                      <span className={styles.modelBarTrack}>
+                        <span className={styles.modelBarFill} style={{ width: `${width}%` }} />
+                      </span>
+                      <span className={styles.modelBarVal}>
+                        {formatAic(m.quantity)} · {share.toFixed(0)}%
+                      </span>
+                    </div>
+                    {hasTokens && (
+                      <div className={styles.modelBarTokenRow}>
+                        <PrimerTooltip text={tokenBreakdownText(m)} direction="nw">
+                          <button
+                            type="button"
+                            className={`${styles.tokenTrigger} ${styles.modelBarTokenBtn}`}
+                          >
+                            {formatTokens(
+                              (m.inputTokens ?? 0) +
+                                (m.outputTokens ?? 0) +
+                                (m.cacheReadTokens ?? 0) +
+                                (m.cacheWriteTokens ?? 0),
+                            )}{" "}
+                            tokens
+                            <TokenParts
+                              input={m.inputTokens ?? 0}
+                              output={m.outputTokens ?? 0}
+                              cached={(m.cacheReadTokens ?? 0) + (m.cacheWriteTokens ?? 0)}
+                            />
+                          </button>
+                        </PrimerTooltip>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1090,6 +1144,59 @@ function formatUsd(value: number): string {
     currency: "USD",
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+/** Compact token count, e.g. "1.2M". */
+function formatTokens(value: number): string {
+  return new Intl.NumberFormat(undefined, {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
+/** Full breakdown text for a model's token tooltip. */
+function tokenBreakdownText(row: {
+  inputTokens?: number;
+  outputTokens?: number;
+  cacheReadTokens?: number;
+  cacheWriteTokens?: number;
+}): string {
+  const input = row.inputTokens ?? 0;
+  const output = row.outputTokens ?? 0;
+  const cacheRead = row.cacheReadTokens ?? 0;
+  const cacheWrite = row.cacheWriteTokens ?? 0;
+  const nf = new Intl.NumberFormat();
+  return [
+    `Input: ${nf.format(input)}`,
+    `Output: ${nf.format(output)}`,
+    `Cache read: ${nf.format(cacheRead)}`,
+    `Cache write: ${nf.format(cacheWrite)}`,
+  ].join(" · ");
+}
+
+/**
+ * Compact, color-coded inline breakdown of input/output/cached token counts,
+ * e.g. "↓1.8M ↑900K ⚡400K". Used to annotate a token total without taking up
+ * much horizontal space - full precision is available via the enclosing
+ * tooltip.
+ */
+function TokenParts({ input, output, cached }: { input: number; output: number; cached: number }) {
+  return (
+    <span className={styles.tokenParts}>
+      <span className={styles.tokenPart} style={{ color: TOKEN_COLORS.input }}>
+        <ArrowDownIcon size={10} fill={TOKEN_COLORS.input} />
+        {formatTokens(input)}
+      </span>
+      <span className={styles.tokenPart} style={{ color: TOKEN_COLORS.output }}>
+        <ArrowUpIcon size={10} fill={TOKEN_COLORS.output} />
+        {formatTokens(output)}
+      </span>
+      <span className={styles.tokenPart} style={{ color: TOKEN_COLORS.cache }}>
+        <CacheIcon size={10} fill={TOKEN_COLORS.cache} />
+        {formatTokens(cached)}
+      </span>
+    </span>
+  );
 }
 
 function formatMonthEnd(isoDate: string): string {
