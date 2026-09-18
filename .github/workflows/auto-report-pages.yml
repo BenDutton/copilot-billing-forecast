@@ -58,7 +58,7 @@ jobs:
       # the bundled scripts match the ref the caller referenced (@main, a tag,
       # a branch, or a SHA) instead of always pulling main.
       - name: Checkout copilot-billing-forecast
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ${{ job.workflow_repository }}
           ref: ${{ job.workflow_sha }}
@@ -72,12 +72,12 @@ jobs:
         run: .github/scripts/fetch-report.sh
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "24"
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
         with:
           static_site_generator: next
 
@@ -89,7 +89,7 @@ jobs:
         env:
           NEXT_PUBLIC_COMMIT_SHA: ${{ job.workflow_sha }}
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./out
 
@@ -102,4 +102,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
